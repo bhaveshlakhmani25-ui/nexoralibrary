@@ -73,7 +73,7 @@ export const Player = () => {
   });
 
   return (
-    <RigidBody ref={bodyRef} position={[0, 2, 0]} colliders="cuboid" lockRotations>
+    <RigidBody ref={bodyRef} position={[0, 2, 25]} colliders="cuboid" lockRotations>
       {/* Cute blocky avatar */}
       <group>
         {/* Head */}

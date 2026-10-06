@@ -9,6 +9,7 @@
 - [x] Build Study Mode Focus Timer (25/50/60/90 mins, pause/resume/end).
 - [x] Apply responsive "3D game world" styling.
 - [x] Transform Library into immersive React Three Fiber 3D world.
+- [x] Refine 3D environment: architectural details, detailed furniture, study zones (Silent, Group, Reading Nook).
 - [x] Test and commit code.
 
 ## Milestone 2: Group Rooms and Shared State (Planned)
