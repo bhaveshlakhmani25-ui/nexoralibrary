@@ -1,97 +1,172 @@
-import { useRef } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useKeyboardControls } from '@react-three/drei';
 import { RigidBody, RapierRigidBody } from '@react-three/rapier';
-import * as THREE from 'three';
+import { useKeyboardControls } from '@react-three/drei';
 import { useGameStore } from '../../store';
+import * as THREE from 'three';
+
+const WALK_SPEED = 5;
 
 export const Player = () => {
   const bodyRef = useRef<RapierRigidBody>(null);
+  const avatarRef = useRef<THREE.Group>(null);
   const [, getKeys] = useKeyboardControls();
-  const { joystickVector, activeTableId } = useGameStore();
-  const { camera } = useThree();
+  const { joystickVector, isSeated, seatTransform } = useGameStore();
+  const { camera, gl } = useThree();
 
-  const speed = 5;
-  const turnSpeed = 5;
-  const playerPosition = new THREE.Vector3();
-  const cameraTarget = new THREE.Vector3();
+  const [yaw, setYaw] = useState(0);
+  const [pitch, setPitch] = useState(0);
 
-  useFrame((_state, delta) => {
-    if (!bodyRef.current || activeTableId !== null) return; // don't move if using table
+  // Mouse drag logic for looking around while seated
+  useEffect(() => {
+    if (!isSeated) return;
 
-    const keys = getKeys();
-    const linvel = bodyRef.current.linvel();
-    const translation = bodyRef.current.translation();
+    let isDragging = false;
+    let previousTouch: { x: number, y: number } | null = null;
+
+    const onPointerDown = () => { isDragging = true; };
+    const onPointerUp = () => { isDragging = false; previousTouch = null; };
+    const onPointerMove = (e: PointerEvent) => {
+      if (!isDragging) return;
+      setYaw((y) => y - e.movementX * 0.005);
+      setPitch((p) => Math.max(-Math.PI / 2, Math.min(Math.PI / 2, p - e.movementY * 0.005)));
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!previousTouch) {
+        previousTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        return;
+      }
+      const dx = e.touches[0].clientX - previousTouch.x;
+      const dy = e.touches[0].clientY - previousTouch.y;
+      setYaw((y) => y - dx * 0.005);
+      setPitch((p) => Math.max(-Math.PI / 2, Math.min(Math.PI / 2, p - dy * 0.005)));
+      previousTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    };
+
+    gl.domElement.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointermove', onPointerMove);
+    gl.domElement.addEventListener('touchmove', onTouchMove);
+
+    return () => {
+      gl.domElement.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointermove', onPointerMove);
+      gl.domElement.removeEventListener('touchmove', onTouchMove);
+    };
+  }, [isSeated, gl.domElement]);
+
+  // Teleport to seat when seated changes
+  useEffect(() => {
+    if (isSeated && seatTransform && bodyRef.current) {
+      bodyRef.current.setTranslation(new THREE.Vector3(...seatTransform.pos), true);
+      const euler = new THREE.Euler(...seatTransform.rot);
+      const quat = new THREE.Quaternion().setFromEuler(euler);
+      bodyRef.current.setRotation(quat, true);
+      bodyRef.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      bodyRef.current.setAngvel({ x: 0, y: 0, z: 0 }, true);
+      
+      setYaw(seatTransform.rot[1]);
+      setPitch(0);
+    } else if (!isSeated && seatTransform && bodyRef.current) {
+      // Stand up beside the chair
+      const standPos = new THREE.Vector3(seatTransform.pos[0] + 1, seatTransform.pos[1] + 1, seatTransform.pos[2]);
+      bodyRef.current.setTranslation(standPos, true);
+    }
+  }, [isSeated, seatTransform]);
+
+  useFrame((state) => {
+    if (!bodyRef.current || !avatarRef.current) return;
+
+    if (isSeated) {
+      // Sit down slightly lower
+      avatarRef.current.position.y = -0.5; 
+      
+      // Camera is first-person (at head level)
+      const headPos = new THREE.Vector3(0, 1.2, 0.2); 
+      const playerWorldPos = bodyRef.current.translation();
+      
+      const camPos = new THREE.Vector3(playerWorldPos.x, playerWorldPos.y + headPos.y, playerWorldPos.z + headPos.z);
+      camera.position.lerp(camPos, 0.1);
+
+      // Apply pitch and yaw
+      const targetRotation = new THREE.Euler(pitch, yaw, 0, 'YXZ');
+      const targetQuat = new THREE.Quaternion().setFromEuler(targetRotation);
+      camera.quaternion.slerp(targetQuat, 0.2);
+      return;
+    }
+
+    // --- NORMAL WALKING LOGIC ---
+    avatarRef.current.position.y = 0; 
+
+    const { forward, backward, left, right } = getKeys();
+    const velocity = bodyRef.current.linvel();
     
-    playerPosition.set(translation.x, translation.y, translation.z);
-
-    // Calculate input direction
     let moveX = 0;
     let moveZ = 0;
+    
+    if (forward) moveZ -= 1;
+    if (backward) moveZ += 1;
+    if (left) moveX -= 1;
+    if (right) moveX += 1;
 
-    if (keys.forward) moveZ -= 1;
-    if (keys.backward) moveZ += 1;
-    if (keys.left) moveX -= 1;
-    if (keys.right) moveX += 1;
-
-    // Joystick override
     if (joystickVector.x !== 0 || joystickVector.y !== 0) {
       moveX = joystickVector.x;
-      moveZ = -joystickVector.y; // Y up is forward (negative Z)
+      moveZ = -joystickVector.y; 
     }
 
-    const direction = new THREE.Vector3(moveX, 0, moveZ).normalize();
-    
-    // Apply movement
-    if (direction.length() > 0) {
-      bodyRef.current.setLinvel({ x: direction.x * speed, y: linvel.y, z: direction.z * speed }, true);
+    const direction = new THREE.Vector3(moveX, 0, moveZ).normalize().multiplyScalar(WALK_SPEED);
+    bodyRef.current.setLinvel({ x: direction.x, y: velocity.y, z: direction.z }, true);
 
-      // Rotate character to face movement direction
+    if (direction.lengthSq() > 0.1) {
       const angle = Math.atan2(direction.x, direction.z);
-      const targetRotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
-      
-      const currentRotation = bodyRef.current.rotation();
-      const currentQuat = new THREE.Quaternion(currentRotation.x, currentRotation.y, currentRotation.z, currentRotation.w);
-      currentQuat.slerp(targetRotation, turnSpeed * delta);
-      
-      bodyRef.current.setRotation({ x: currentQuat.x, y: currentQuat.y, z: currentQuat.z, w: currentQuat.w }, true);
-    } else {
-      // Stop moving smoothly
-      bodyRef.current.setLinvel({ x: 0, y: linvel.y, z: 0 }, true);
+      avatarRef.current.rotation.y = THREE.MathUtils.lerp(avatarRef.current.rotation.y, angle, 0.1);
+      avatarRef.current.position.y = Math.abs(Math.sin(state.clock.elapsedTime * 10)) * 0.1;
     }
 
-    // Camera follow (Third Person)
-    const idealCameraOffset = new THREE.Vector3(0, 4, 8); // slightly up and behind
-    idealCameraOffset.applyQuaternion(new THREE.Quaternion(0, 0, 0, 1)); // We can make it rotate with player, but a static angled view is easier to navigate indoor.
-    // Actually, fixed angle isometric/third-person is great.
-    
-    cameraTarget.copy(playerPosition);
-    const cameraPosition = playerPosition.clone().add(new THREE.Vector3(0, 5, 8));
-    
-    camera.position.lerp(cameraPosition, 0.1);
-    camera.lookAt(cameraTarget.add(new THREE.Vector3(0, 1, 0)));
+    const playerPos = bodyRef.current.translation();
+    const cameraOffset = new THREE.Vector3(0, 4, 8);
+    const targetCameraPos = new THREE.Vector3(playerPos.x, playerPos.y, playerPos.z).add(cameraOffset);
+    camera.position.lerp(targetCameraPos, 0.1);
+    camera.lookAt(playerPos.x, playerPos.y + 1, playerPos.z);
   });
 
   return (
-    <RigidBody ref={bodyRef} position={[0, 2, 25]} colliders="cuboid" lockRotations>
-      {/* Cute blocky avatar */}
-      <group>
+    <RigidBody ref={bodyRef} position={[0, 2, 25]} colliders="cuboid" lockRotations mass={1}>
+      <group ref={avatarRef}>
         {/* Head */}
         <mesh position={[0, 1.2, 0]} castShadow>
           <boxGeometry args={[0.6, 0.6, 0.6]} />
-          <meshStandardMaterial color="#f0d4b5" />
+          <meshStandardMaterial color="#f1c27d" roughness={0.6} />
         </mesh>
+        
         {/* Body */}
         <mesh position={[0, 0.5, 0]} castShadow>
           <boxGeometry args={[0.7, 0.8, 0.4]} />
-          <meshStandardMaterial color="#3498db" />
+          <meshStandardMaterial color="#e74c3c" roughness={0.8} />
         </mesh>
-        {/* Legs */}
-        <mesh position={[-0.2, 0, 0]} castShadow>
+        
+        {/* Left Arm */}
+        <mesh position={[-0.45, 0.6, isSeated ? 0.3 : 0]} rotation={[isSeated ? -Math.PI / 3 : 0, 0, 0]} castShadow>
+          <boxGeometry args={[0.2, 0.6, 0.2]} />
+          <meshStandardMaterial color="#f1c27d" />
+        </mesh>
+        
+        {/* Right Arm */}
+        <mesh position={[0.45, 0.6, isSeated ? 0.3 : 0]} rotation={[isSeated ? -Math.PI / 3 : 0, 0, 0]} castShadow>
+          <boxGeometry args={[0.2, 0.6, 0.2]} />
+          <meshStandardMaterial color="#f1c27d" />
+        </mesh>
+
+        {/* Left Leg */}
+        <mesh position={[-0.2, isSeated ? 0.2 : -0.2, isSeated ? 0.3 : 0]} rotation={[isSeated ? -Math.PI / 2 : 0, 0, 0]} castShadow>
           <boxGeometry args={[0.25, 0.6, 0.25]} />
           <meshStandardMaterial color="#2c3e50" />
         </mesh>
-        <mesh position={[0.2, 0, 0]} castShadow>
+        
+        {/* Right Leg */}
+        <mesh position={[0.2, isSeated ? 0.2 : -0.2, isSeated ? 0.3 : 0]} rotation={[isSeated ? -Math.PI / 2 : 0, 0, 0]} castShadow>
           <boxGeometry args={[0.25, 0.6, 0.25]} />
           <meshStandardMaterial color="#2c3e50" />
         </mesh>
