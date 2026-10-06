@@ -12,6 +12,7 @@
 - [x] Refine 3D environment: architectural details, detailed furniture, study zones (Silent, Group, Reading Nook).
 - [x] Implement immersive seated study experience (360 view, minimal UI).
 - [x] Upgrade to multi-level library (Mezzanine, grand staircase, procedural 3D enhancements).
+- [x] Add cozy upper gallery covering 70% of the space with a central glass atrium.
   - *Note: True custom low-poly models via Blender/Blockbench are deferred. Used procedurally generated Three.js primitives to achieve the required cozy, multi-level look without blocking.*
 - [x] Test and commit code.
 

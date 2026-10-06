@@ -58,32 +58,48 @@ const Library = () => {
               <LargePlant position={[-14, 0, -32]} />
               <LargePlant position={[14, 0, -32]} />
 
-              {/* === MEZZANINE FLOOR (Y = 10) === */}
-              {/* Left Mezzanine */}
-              <Bookshelf position={[-24, 10, 5]} rotation={[0, Math.PI / 2, 0]} label="Classics" />
-              <Bookshelf position={[-24, 10, -5]} rotation={[0, Math.PI / 2, 0]} label="Poetry" />
-              <Bookshelf position={[-24, 10, -15]} rotation={[0, Math.PI / 2, 0]} label="Drama" />
-              <IndividualDesk id={7} position={[-17, 10, 15]} rotation={[0, Math.PI / 2, 0]} />
-              <IndividualDesk id={8} position={[-17, 10, 5]} rotation={[0, Math.PI / 2, 0]} />
-              <IndividualDesk id={9} position={[-17, 10, -5]} rotation={[0, Math.PI / 2, 0]} />
-              <IndividualDesk id={10} position={[-17, 10, -15]} rotation={[0, Math.PI / 2, 0]} />
-              <WallArt position={[-24.4, 14, 15]} rotation={[0, Math.PI / 2, 0]} />
+              {/* === MEZZANINE UPPER GALLERY (Y = 10) === */}
+              {/* Left Gallery */}
+              <Bookshelf position={[-24, 10, 15]} rotation={[0, Math.PI / 2, 0]} label="Classics" />
+              <Bookshelf position={[-24, 10, 5]} rotation={[0, Math.PI / 2, 0]} label="Poetry" />
+              <Bookshelf position={[-24, 10, -5]} rotation={[0, Math.PI / 2, 0]} label="Drama" />
+              <Bookshelf position={[-24, 10, -15]} rotation={[0, Math.PI / 2, 0]} label="Mythology" />
+              
+              <IndividualDesk id={7} position={[-15, 10, 15]} rotation={[0, Math.PI / 2, 0]} />
+              <IndividualDesk id={8} position={[-15, 10, 5]} rotation={[0, Math.PI / 2, 0]} />
+              <IndividualDesk id={9} position={[-15, 10, -5]} rotation={[0, Math.PI / 2, 0]} />
+              <IndividualDesk id={10} position={[-15, 10, -15]} rotation={[0, Math.PI / 2, 0]} />
+              <WallArt position={[-24.4, 14, 10]} rotation={[0, Math.PI / 2, 0]} />
+              <WallArt position={[-24.4, 14, -10]} rotation={[0, Math.PI / 2, 0]} />
+              <LargePlant position={[-22, 10, 0]} />
 
-              {/* Right Mezzanine */}
+              {/* Right Gallery */}
               <Bookshelf position={[24, 10, 15]} rotation={[0, -Math.PI / 2, 0]} label="Law" />
               <Bookshelf position={[24, 10, 5]} rotation={[0, -Math.PI / 2, 0]} label="Business" />
               <Bookshelf position={[24, 10, -5]} rotation={[0, -Math.PI / 2, 0]} label="Medicine" />
               <Bookshelf position={[24, 10, -15]} rotation={[0, -Math.PI / 2, 0]} label="Engineering" />
-              <IndividualDesk id={11} position={[17, 10, 15]} rotation={[0, -Math.PI / 2, 0]} />
-              <IndividualDesk id={12} position={[17, 10, 5]} rotation={[0, -Math.PI / 2, 0]} />
-              <IndividualDesk id={13} position={[17, 10, -5]} rotation={[0, -Math.PI / 2, 0]} />
-              <IndividualDesk id={14} position={[17, 10, -15]} rotation={[0, -Math.PI / 2, 0]} />
+              
+              <IndividualDesk id={11} position={[15, 10, 15]} rotation={[0, -Math.PI / 2, 0]} />
+              <IndividualDesk id={12} position={[15, 10, 5]} rotation={[0, -Math.PI / 2, 0]} />
+              <IndividualDesk id={13} position={[15, 10, -5]} rotation={[0, -Math.PI / 2, 0]} />
+              <IndividualDesk id={14} position={[15, 10, -15]} rotation={[0, -Math.PI / 2, 0]} />
               <WallArt position={[24.4, 14, 0]} rotation={[0, -Math.PI / 2, 0]} />
+              <LargePlant position={[22, 10, 10]} />
 
-              {/* Back Mezzanine */}
-              <ReadingNook id={15} position={[-10, 10, -30]} />
-              <ReadingNook id={16} position={[10, 10, -30]} />
-              <Bookshelf position={[0, 10, -34]} rotation={[0, 0, 0]} label="Rare Books" />
+              {/* Back Gallery */}
+              <Bookshelf position={[-8, 10, -34]} rotation={[0, 0, 0]} label="Rare Books" />
+              <Bookshelf position={[8, 10, -34]} rotation={[0, 0, 0]} label="Archives" />
+              <ReadingNook id={15} position={[-18.5, 10, -30]} rotation={[0, Math.PI/2, 0]} />
+              <ReadingNook id={16} position={[18.5, 10, -30]} rotation={[0, -Math.PI/2, 0]} />
+              <GroupTable id={17} position={[0, 10, -28]} />
+
+              {/* Front Gallery (Over Entrance) */}
+              <Bookshelf position={[-8, 10, 34]} rotation={[0, Math.PI, 0]} label="New Arrivals" />
+              <Bookshelf position={[8, 10, 34]} rotation={[0, Math.PI, 0]} label="Periodicals" />
+              <ReadingNook id={18} position={[-18.5, 10, 28]} rotation={[0, Math.PI/2, 0]} />
+              <ReadingNook id={19} position={[18.5, 10, 28]} rotation={[0, -Math.PI/2, 0]} />
+              <IndividualDesk id={20} position={[-5, 10, 23]} rotation={[0, Math.PI, 0]} />
+              <IndividualDesk id={21} position={[5, 10, 23]} rotation={[0, Math.PI, 0]} />
 
               <Player />
             </Physics>

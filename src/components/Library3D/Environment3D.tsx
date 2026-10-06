@@ -31,15 +31,53 @@ export const DustParticles = () => {
   );
 };
 
+export const GlassRailing = ({ position, rotation = [0, 0, 0], length }: { position: [number, number, number], rotation?: [number, number, number], length: number }) => {
+  const postSpacing = 2;
+  const numPosts = Math.ceil(length / postSpacing) + 1;
+  const postMat = new THREE.MeshStandardMaterial({ color: '#3d2314', roughness: 0.7 });
+  const handrailMat = new THREE.MeshStandardMaterial({ color: '#3d2314', roughness: 0.6 });
+  const glassMat = new THREE.MeshPhysicalMaterial({ 
+    color: '#ffffff', transparent: true, opacity: 0.2, roughness: 0.1, metalness: 0.1, transmission: 0.9, ior: 1.5 
+  });
+
+  return (
+    <RigidBody type="fixed" position={position} rotation={rotation}>
+      <group>
+        {/* Glass Panel */}
+        <mesh position={[0, 0.5, 0]} castShadow>
+          <boxGeometry args={[length, 0.9, 0.05]} />
+          <primitive object={glassMat} attach="material" />
+        </mesh>
+        {/* Top Handrail */}
+        <mesh position={[0, 1.0, 0]} castShadow>
+          <boxGeometry args={[length, 0.1, 0.15]} />
+          <primitive object={handrailMat} attach="material" />
+        </mesh>
+        {/* Bottom Rail */}
+        <mesh position={[0, 0.05, 0]} castShadow>
+          <boxGeometry args={[length, 0.1, 0.1]} />
+          <primitive object={postMat} attach="material" />
+        </mesh>
+        {/* Posts */}
+        {Array.from({ length: numPosts }).map((_, i) => {
+          const xPos = -length / 2 + (i * length) / (numPosts - 1);
+          return (
+            <mesh key={`post-${i}`} position={[xPos, 0.5, 0]} castShadow>
+              <boxGeometry args={[0.1, 1, 0.1]} />
+              <primitive object={postMat} attach="material" />
+            </mesh>
+          );
+        })}
+      </group>
+    </RigidBody>
+  );
+};
+
 export const Environment3D = () => {
   const wallMat = new THREE.MeshStandardMaterial({ color: '#f5eee6', roughness: 0.9 });
   const wainscotingMat = new THREE.MeshStandardMaterial({ color: '#3d2314', roughness: 0.8 });
   const beamMat = new THREE.MeshStandardMaterial({ color: '#2a1708', roughness: 0.9 });
   const floorMat = new THREE.MeshStandardMaterial({ color: '#5c3a21', roughness: 0.7 });
-  const railingMat = new THREE.MeshStandardMaterial({ color: '#3d2314', roughness: 0.7 });
-  const glassMat = new THREE.MeshStandardMaterial({
-    color: '#b9ded9', transparent: true, opacity: 0.35, roughness: 0.08, metalness: 0.15,
-  });
   
   return (
     <group>
@@ -75,37 +113,57 @@ export const Environment3D = () => {
         <meshStandardMaterial color="#d4af37" roughness={0.9} />
       </mesh>
 
-      {/* Mezzanine: roughly 70% covered floor, with a central open atrium. */}
+      {/* Upper Floor (70% coverage) */}
       <RigidBody type="fixed">
-        {/* Left and right galleries wrap the main hall. */}
-        <mesh position={[-17, 9.75, 0]} receiveShadow castShadow>
-          <boxGeometry args={[16, 0.5, 70]} />
+        {/* Left Upper Floor */}
+        <mesh position={[-18.5, 9.75, 0]} receiveShadow castShadow>
+          <boxGeometry args={[13, 0.5, 70]} />
           <primitive object={floorMat} attach="material" />
         </mesh>
-        <mesh position={[17, 9.75, 0]} receiveShadow castShadow>
-          <boxGeometry args={[16, 0.5, 70]} />
+        {/* Right Upper Floor */}
+        <mesh position={[18.5, 9.75, 0]} receiveShadow castShadow>
+          <boxGeometry args={[13, 0.5, 70]} />
           <primitive object={floorMat} attach="material" />
         </mesh>
-        {/* Back bridge closes the second floor while retaining the atrium. */}
-        <mesh position={[0, 9.75, -30]} receiveShadow castShadow>
-          <boxGeometry args={[18, 0.5, 10]} />
+        {/* Front Upper Floor (Over Entrance) */}
+        <mesh position={[0, 9.75, 27.5]} receiveShadow castShadow>
+          <boxGeometry args={[24, 0.5, 15]} />
+          <primitive object={floorMat} attach="material" />
+        </mesh>
+        {/* Back Upper Floor */}
+        <mesh position={[0, 9.75, -27.5]} receiveShadow castShadow>
+          <boxGeometry args={[24, 0.5, 15]} />
           <primitive object={floorMat} attach="material" />
         </mesh>
       </RigidBody>
 
-      {/* Glass balcony railings frame the 30% open atrium below. */}
-      <RigidBody type="fixed">
-        <mesh position={[-9, 10.7, 0]} castShadow><boxGeometry args={[0.12, 1.4, 70]} /><primitive object={glassMat} attach="material" /></mesh>
-        <mesh position={[9, 10.7, 0]} castShadow><boxGeometry args={[0.12, 1.4, 70]} /><primitive object={glassMat} attach="material" /></mesh>
-        <mesh position={[0, 10.7, -25]} castShadow><boxGeometry args={[18, 1.4, 0.12]} /><primitive object={glassMat} attach="material" /></mesh>
+      {/* Upper Floor Green Rugs */}
+      <mesh receiveShadow position={[-18.5, 10.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[8, 60]} />
+        <meshStandardMaterial color="#2d4c36" roughness={0.9} />
+      </mesh>
+      <mesh receiveShadow position={[18.5, 10.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[8, 60]} />
+        <meshStandardMaterial color="#2d4c36" roughness={0.9} />
+      </mesh>
+      <mesh receiveShadow position={[0, 10.01, -27.5]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[20, 8]} />
+        <meshStandardMaterial color="#2d4c36" roughness={0.9} />
+      </mesh>
+      <mesh receiveShadow position={[0, 10.01, 27.5]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[20, 8]} />
+        <meshStandardMaterial color="#2d4c36" roughness={0.9} />
+      </mesh>
 
-        {[-30, -15, 0, 15, 30].map((z) => (
-          <group key={`glass-post-${z}`}>
-            <mesh position={[-9, 10.7, z]} castShadow><boxGeometry args={[0.22, 1.5, 0.22]} /><primitive object={railingMat} attach="material" /></mesh>
-            <mesh position={[9, 10.7, z]} castShadow><boxGeometry args={[0.22, 1.5, 0.22]} /><primitive object={railingMat} attach="material" /></mesh>
-          </group>
-        ))}
-      </RigidBody>
+      {/* Atrium Glass Balcony Railings */}
+      {/* Left Railing */}
+      <GlassRailing position={[-12, 10, 0]} rotation={[0, Math.PI / 2, 0]} length={40} />
+      {/* Right Railing */}
+      <GlassRailing position={[12, 10, 0]} rotation={[0, -Math.PI / 2, 0]} length={40} />
+      {/* Front Railing */}
+      <GlassRailing position={[0, 10, 20]} rotation={[0, Math.PI, 0]} length={24} />
+      {/* Back Railing */}
+      <GlassRailing position={[0, 10, -20]} rotation={[0, 0, 0]} length={24} />
 
       {/* Architectural Walls */}
       <RigidBody type="fixed">
@@ -140,6 +198,7 @@ export const Environment3D = () => {
         {/* Front Wall */}
         <mesh position={[0, 15, 35]} receiveShadow material={wallMat}><boxGeometry args={[50, 30, 1]} /></mesh>
         <mesh position={[0, 1.5, 34.4]} receiveShadow material={wainscotingMat}><boxGeometry args={[50, 3, 0.2]} /></mesh>
+        <mesh position={[0, 11.5, 34.4]} receiveShadow material={wainscotingMat}><boxGeometry args={[50, 3, 0.2]} /></mesh>
       </RigidBody>
 
       {/* Roof / Ceiling */}
@@ -154,7 +213,7 @@ export const Environment3D = () => {
         </mesh>
       ))}
 
-      {/* Hanging Pendant Lamps for Central Hall */}
+      {/* Hanging Pendant Lamps for Central Atrium */}
       {[-15, 0, 15].map((z, i) => (
         <group key={`lamp-${i}`} position={[0, 29, z]}>
           <mesh material={beamMat}><cylinderGeometry args={[0.05, 0.05, 12]} /></mesh>
@@ -164,17 +223,33 @@ export const Environment3D = () => {
         </group>
       ))}
 
-      {/* Smaller Hanging Lamps for Mezzanine */}
-      {[-20, 0, 20].map((z, i) => (
-        <group key={`mlamp-l-${i}`} position={[-20, 29, z]}>
+      {/* Smaller Hanging Lamps for Mezzanine Gallery */}
+      {[-25, -10, 5, 20].map((z, i) => (
+        <group key={`mlamp-l-${i}`} position={[-18.5, 29, z]}>
           <mesh material={beamMat}><cylinderGeometry args={[0.02, 0.02, 8]} /></mesh>
           <mesh position={[0, -4, 0]} material={new THREE.MeshStandardMaterial({ color: '#2c3e50' })}><cylinderGeometry args={[0.8, 1, 0.5]} /></mesh>
           <mesh position={[0, -4.1, 0]} material={new THREE.MeshBasicMaterial({ color: '#ffdf85' })}><sphereGeometry args={[0.4]} /></mesh>
           <pointLight position={[0, -4.5, 0]} intensity={1} distance={20} color="#ffdf85" castShadow />
         </group>
       ))}
-      {[-20, 0, 20].map((z, i) => (
-        <group key={`mlamp-r-${i}`} position={[20, 29, z]}>
+      {[-25, -10, 5, 20].map((z, i) => (
+        <group key={`mlamp-r-${i}`} position={[18.5, 29, z]}>
+          <mesh material={beamMat}><cylinderGeometry args={[0.02, 0.02, 8]} /></mesh>
+          <mesh position={[0, -4, 0]} material={new THREE.MeshStandardMaterial({ color: '#2c3e50' })}><cylinderGeometry args={[0.8, 1, 0.5]} /></mesh>
+          <mesh position={[0, -4.1, 0]} material={new THREE.MeshBasicMaterial({ color: '#ffdf85' })}><sphereGeometry args={[0.4]} /></mesh>
+          <pointLight position={[0, -4.5, 0]} intensity={1} distance={20} color="#ffdf85" castShadow />
+        </group>
+      ))}
+      {[-10, 10].map((x, i) => (
+        <group key={`mlamp-b-${i}`} position={[x, 29, -27.5]}>
+          <mesh material={beamMat}><cylinderGeometry args={[0.02, 0.02, 8]} /></mesh>
+          <mesh position={[0, -4, 0]} material={new THREE.MeshStandardMaterial({ color: '#2c3e50' })}><cylinderGeometry args={[0.8, 1, 0.5]} /></mesh>
+          <mesh position={[0, -4.1, 0]} material={new THREE.MeshBasicMaterial({ color: '#ffdf85' })}><sphereGeometry args={[0.4]} /></mesh>
+          <pointLight position={[0, -4.5, 0]} intensity={1} distance={20} color="#ffdf85" castShadow />
+        </group>
+      ))}
+      {[-10, 10].map((x, i) => (
+        <group key={`mlamp-f-${i}`} position={[x, 29, 27.5]}>
           <mesh material={beamMat}><cylinderGeometry args={[0.02, 0.02, 8]} /></mesh>
           <mesh position={[0, -4, 0]} material={new THREE.MeshStandardMaterial({ color: '#2c3e50' })}><cylinderGeometry args={[0.8, 1, 0.5]} /></mesh>
           <mesh position={[0, -4.1, 0]} material={new THREE.MeshBasicMaterial({ color: '#ffdf85' })}><sphereGeometry args={[0.4]} /></mesh>
