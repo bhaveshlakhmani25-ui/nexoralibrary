@@ -71,12 +71,14 @@ export const useGameStore = create<GameState>((set) => ({
   bookCategory: null,
   setBookCategory: (category) => set({ bookCategory: category, sessionState: 'reading' }),
 
-  endSession: () => set({ 
+  // Keep the last seat transform for one render after leaving. Player uses it
+  // to place the avatar beside the chair before normal movement resumes.
+  endSession: () => set((state) => ({
     sessionState: 'idle', 
     isSeated: false, 
-    seatTransform: null, 
-    timerActive: false 
-  }),
+    seatTransform: state.seatTransform,
+    timerActive: false
+  })),
 
   joystickVector: { x: 0, y: 0 },
   setJoystickVector: (v) => set({ joystickVector: v }),

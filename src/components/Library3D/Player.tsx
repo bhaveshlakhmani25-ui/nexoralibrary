@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { RigidBody, RapierRigidBody } from '@react-three/rapier';
 import { useKeyboardControls } from '@react-three/drei';
+import { RigidBodyType } from '@dimforge/rapier3d-compat';
 import { useGameStore } from '../../store';
 import * as THREE from 'three';
 
@@ -57,9 +58,11 @@ export const Player = () => {
     };
   }, [isSeated, gl.domElement]);
 
-  // Teleport to seat when seated changes
+  // A seated player is kinematic so the chair/table colliders cannot push the
+  // avatar away (the source of the jumpy, stuck-on-chair behaviour).
   useEffect(() => {
     if (isSeated && seatTransform && bodyRef.current) {
+      bodyRef.current.setBodyType(RigidBodyType.KinematicPositionBased, true);
       bodyRef.current.setTranslation(new THREE.Vector3(...seatTransform.pos), true);
       const euler = new THREE.Euler(...seatTransform.rot);
       const quat = new THREE.Quaternion().setFromEuler(euler);
@@ -70,9 +73,16 @@ export const Player = () => {
       setYaw(seatTransform.rot[1]);
       setPitch(0);
     } else if (!isSeated && seatTransform && bodyRef.current) {
-      // Stand up beside the chair
-      const standPos = new THREE.Vector3(seatTransform.pos[0] + 1, seatTransform.pos[1] + 1, seatTransform.pos[2]);
+      // Place the player just behind the chair, relative to the chair's own
+      // direction, then restore normal physics and walking controls.
+      const standOffset = new THREE.Vector3(0, 1, 1.25)
+        .applyAxisAngle(new THREE.Vector3(0, 1, 0), seatTransform.rot[1]);
+      const standPos = new THREE.Vector3(...seatTransform.pos).add(standOffset);
+      bodyRef.current.setBodyType(RigidBodyType.Dynamic, true);
       bodyRef.current.setTranslation(standPos, true);
+      bodyRef.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      bodyRef.current.setAngvel({ x: 0, y: 0, z: 0 }, true);
+      bodyRef.current.wakeUp();
     }
   }, [isSeated, seatTransform]);
 
