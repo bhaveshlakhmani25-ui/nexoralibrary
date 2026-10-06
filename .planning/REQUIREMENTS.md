@@ -2,7 +2,7 @@
 
 ## Core Features (Milestone 1)
 - **Homepage:** Title "Nexora", tagline "Study together. Focus anywhere.", and "Enter the Library" button.
-- **Virtual Library:** One interactive room with selectable study tables (top-down / isometric view for MVP).
+- **Virtual Library:** Immersive 3D game world using React Three Fiber. Includes collisions, third-person avatar, interactive study tables, and rich lighting.
 - **Table Menu:**
   - **Read Mode:** Categories (Fantasy, biography, popular novels, self-improvement) with sample text.
   - **Study Mode:** Focus timers (25, 50, 60, 90 mins).
