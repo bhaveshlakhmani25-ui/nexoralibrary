@@ -293,16 +293,26 @@ export const WallArt = ({ position, rotation = [0,0,0] }: { position: [number, n
 export const GrandStaircase = ({ position, rotation = [0,0,0] }: { position: [number, number, number], rotation?: [number, number, number] }) => {
   const steps = 20;
   const stepHeight = 0.5;
-  const stepDepth = 0.6;
+  // A slightly deeper tread keeps the hidden walk surface below a 35° slope,
+  // which lets the dynamic player body climb it smoothly.
+  const stepDepth = 0.75;
   const width = 4;
+  const totalHeight = steps * stepHeight;
+  const totalDepth = steps * stepDepth;
+  const rampAngle = Math.atan2(totalHeight, totalDepth);
+  const rampLength = Math.hypot(totalDepth, totalHeight);
   
   return (
     <group position={position} rotation={rotation}>
-      {/* Invisible ramp for smooth player collision */}
-      <RigidBody type="fixed" colliders="hull">
-        <mesh position={[0, (steps * stepHeight) / 2, -(steps * stepDepth) / 2]} rotation={[Math.atan2(stepHeight, stepDepth), 0, 0]} visible={false}>
-          <boxGeometry args={[width, 0.1, Math.sqrt(Math.pow(steps * stepDepth, 2) + Math.pow(steps * stepHeight, 2))]} />
-        </mesh>
+      {/* Explicit walkable ramp collider. The visible steps stay decorative,
+          while this smooth surface gives the player Roblox-like stair movement. */}
+      <RigidBody type="fixed" colliders={false}>
+        <CuboidCollider
+          args={[width / 2, 0.15, rampLength / 2]}
+          position={[0, totalHeight / 2, -totalDepth / 2]}
+          rotation={[rampAngle, 0, 0]}
+          friction={1}
+        />
       </RigidBody>
 
       {/* Visual steps */}
@@ -313,11 +323,11 @@ export const GrandStaircase = ({ position, rotation = [0,0,0] }: { position: [nu
       ))}
 
       {/* Handrails */}
-      <mesh position={[-width/2 + 0.1, (steps * stepHeight) / 2 + 1, -(steps * stepDepth) / 2]} rotation={[Math.atan2(stepHeight, stepDepth), 0, 0]} castShadow material={darkWood}>
-        <cylinderGeometry args={[0.05, 0.05, Math.sqrt(Math.pow(steps * stepDepth, 2) + Math.pow(steps * stepHeight, 2))]} />
+      <mesh position={[-width/2 + 0.1, totalHeight / 2 + 1, -totalDepth / 2]} rotation={[rampAngle, 0, 0]} castShadow material={darkWood}>
+        <cylinderGeometry args={[0.05, 0.05, rampLength]} />
       </mesh>
-      <mesh position={[width/2 - 0.1, (steps * stepHeight) / 2 + 1, -(steps * stepDepth) / 2]} rotation={[Math.atan2(stepHeight, stepDepth), 0, 0]} castShadow material={darkWood}>
-        <cylinderGeometry args={[0.05, 0.05, Math.sqrt(Math.pow(steps * stepDepth, 2) + Math.pow(steps * stepHeight, 2))]} />
+      <mesh position={[width/2 - 0.1, totalHeight / 2 + 1, -totalDepth / 2]} rotation={[rampAngle, 0, 0]} castShadow material={darkWood}>
+        <cylinderGeometry args={[0.05, 0.05, rampLength]} />
       </mesh>
       
       {/* Railing posts */}
