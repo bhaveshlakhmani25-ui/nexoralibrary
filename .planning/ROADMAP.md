@@ -10,6 +10,9 @@
 - [x] Apply responsive "3D game world" styling.
 - [x] Transform Library into immersive React Three Fiber 3D world.
 - [x] Refine 3D environment: architectural details, detailed furniture, study zones (Silent, Group, Reading Nook).
+- [x] Implement immersive seated study experience (360 view, minimal UI).
+- [x] Upgrade to multi-level library (Mezzanine, grand staircase, procedural 3D enhancements).
+  - *Note: True custom low-poly models via Blender/Blockbench are deferred. Used procedurally generated Three.js primitives to achieve the required cozy, multi-level look without blocking.*
 - [x] Test and commit code.
 
 ## Milestone 2: Group Rooms and Shared State (Planned)
