@@ -1,0 +1,130 @@
+:root {
+  --wood-light: #e6b981;
+  --wood-base: #c18a54;
+  --wood-dark: #8b5a2b;
+  --leaf-green: #4a7c59;
+  --leaf-dark: #2d4c36;
+  --lamp-glow: #ffdf85;
+  --paper: #fdf6e3;
+  --text-dark: #332922;
+  --text-light: #fdf6e3;
+  
+  --bg-color: #f4ecd8;
+  
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-shadow: 0 8px 32px rgba(139, 90, 43, 0.15);
+  
+  --btn-3d-shadow: 0 6px 0 var(--wood-dark);
+  --btn-3d-active-shadow: 0 2px 0 var(--wood-dark);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-dark);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 16px;
+}
+
+/* 3D Button Utility */
+.btn-3d {
+  background-color: var(--wood-base);
+  color: var(--text-light);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: var(--btn-3d-shadow);
+  transition: all 0.1s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.btn-3d:hover {
+  background-color: #d19a64;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 0 var(--wood-dark);
+}
+
+.btn-3d:active {
+  transform: translateY(4px);
+  box-shadow: var(--btn-3d-active-shadow);
+}
+
+.btn-3d.secondary {
+  background-color: var(--leaf-green);
+  box-shadow: 0 6px 0 var(--leaf-dark);
+}
+.btn-3d.secondary:hover {
+  background-color: #5b8d6a;
+  box-shadow: 0 8px 0 var(--leaf-dark);
+}
+.btn-3d.secondary:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 var(--leaf-dark);
+}
+
+/* Titles */
+.title-3d {
+  font-size: 4rem;
+  font-weight: 900;
+  color: var(--wood-light);
+  text-shadow: 
+    -1px -1px 0 var(--wood-dark),  
+     1px -1px 0 var(--wood-dark),
+    -1px  1px 0 var(--wood-dark),
+     1px  1px 0 var(--wood-dark),
+     0 8px 0 var(--wood-dark),
+     0 12px 20px rgba(0,0,0,0.3);
+  margin-bottom: 1rem;
+  letter-spacing: 2px;
+}
+
+/* Animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.floating {
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 10px rgba(255,223,133,0.5); }
+  50% { box-shadow: 0 0 25px rgba(255,223,133,0.9); }
+  100% { box-shadow: 0 0 10px rgba(255,223,133,0.5); }
+}
+
+.lamp-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
