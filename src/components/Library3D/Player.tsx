@@ -18,19 +18,23 @@ export const Player = () => {
   const [yaw, setYaw] = useState(0);
   const [pitch, setPitch] = useState(0);
 
-  // Mouse drag logic for looking around while seated
+  // Click-and-drag / trackpad free-look works both while walking and seated.
+  // Walking keeps its third-person camera; seated mode uses a closer eye-level view.
   useEffect(() => {
-    if (!isSeated) return;
-
     let isDragging = false;
     let previousTouch: { x: number, y: number } | null = null;
 
-    const onPointerDown = () => { isDragging = true; };
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.button !== 0) return;
+      isDragging = true;
+      gl.domElement.setPointerCapture?.(e.pointerId);
+    };
     const onPointerUp = () => { isDragging = false; previousTouch = null; };
     const onPointerMove = (e: PointerEvent) => {
       if (!isDragging) return;
       setYaw((y) => y - e.movementX * 0.005);
-      setPitch((p) => Math.max(-Math.PI / 2, Math.min(Math.PI / 2, p - e.movementY * 0.005)));
+      const pitchLimit = isSeated ? Math.PI / 2 : 0.8;
+      setPitch((p) => Math.max(-pitchLimit, Math.min(pitchLimit, p - e.movementY * 0.005)));
     };
 
     const onTouchMove = (e: TouchEvent) => {
@@ -41,7 +45,8 @@ export const Player = () => {
       const dx = e.touches[0].clientX - previousTouch.x;
       const dy = e.touches[0].clientY - previousTouch.y;
       setYaw((y) => y - dx * 0.005);
-      setPitch((p) => Math.max(-Math.PI / 2, Math.min(Math.PI / 2, p - dy * 0.005)));
+      const pitchLimit = isSeated ? Math.PI / 2 : 0.8;
+      setPitch((p) => Math.max(-pitchLimit, Math.min(pitchLimit, p - dy * 0.005)));
       previousTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     };
 
@@ -136,10 +141,15 @@ export const Player = () => {
     }
 
     const playerPos = bodyRef.current.translation();
-    const cameraOffset = new THREE.Vector3(0, 4, 8);
+    const cameraDistance = 8;
+    const cameraOffset = new THREE.Vector3(
+      Math.sin(yaw) * Math.cos(pitch) * cameraDistance,
+      3.6 + Math.sin(pitch) * cameraDistance,
+      Math.cos(yaw) * Math.cos(pitch) * cameraDistance
+    );
     const targetCameraPos = new THREE.Vector3(playerPos.x, playerPos.y, playerPos.z).add(cameraOffset);
     camera.position.lerp(targetCameraPos, 0.1);
-    camera.lookAt(playerPos.x, playerPos.y + 1, playerPos.z);
+    camera.lookAt(playerPos.x, playerPos.y + 1.1, playerPos.z);
   });
 
   return (
