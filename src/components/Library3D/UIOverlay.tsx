@@ -93,6 +93,7 @@ export const UIOverlay = () => {
           </div>
           <div style={{ fontSize: '0.9rem' }}>• Use <strong style={{ color: '#ffdf85' }}>WASD</strong> or <strong style={{ color: '#ffdf85' }}>Arrows</strong> to move.</div>
           {!isTouchDevice && <div style={{ fontSize: '0.9rem' }}>• Click and drag to look around.</div>}
+          <div style={{ fontSize: '0.9rem' }}>• Walk onto stairs to climb to the upper gallery.</div>
           <div style={{ fontSize: '0.9rem' }}>• Walk near a table to interact.</div>
         </div>
       )}

@@ -37,6 +37,9 @@ export const Environment3D = () => {
   const beamMat = new THREE.MeshStandardMaterial({ color: '#2a1708', roughness: 0.9 });
   const floorMat = new THREE.MeshStandardMaterial({ color: '#5c3a21', roughness: 0.7 });
   const railingMat = new THREE.MeshStandardMaterial({ color: '#3d2314', roughness: 0.7 });
+  const glassMat = new THREE.MeshStandardMaterial({
+    color: '#b9ded9', transparent: true, opacity: 0.35, roughness: 0.08, metalness: 0.15,
+  });
   
   return (
     <group>
@@ -72,33 +75,36 @@ export const Environment3D = () => {
         <meshStandardMaterial color="#d4af37" roughness={0.9} />
       </mesh>
 
-      {/* Mezzanine Floors (Height = 10) */}
+      {/* Mezzanine: roughly 70% covered floor, with a central open atrium. */}
       <RigidBody type="fixed">
-        {/* Left Mezzanine */}
-        <mesh position={[-20, 9.75, 0]} receiveShadow castShadow>
-          <boxGeometry args={[10, 0.5, 70]} />
+        {/* Left and right galleries wrap the main hall. */}
+        <mesh position={[-17, 9.75, 0]} receiveShadow castShadow>
+          <boxGeometry args={[16, 0.5, 70]} />
           <primitive object={floorMat} attach="material" />
         </mesh>
-        {/* Right Mezzanine */}
-        <mesh position={[20, 9.75, 0]} receiveShadow castShadow>
-          <boxGeometry args={[10, 0.5, 70]} />
+        <mesh position={[17, 9.75, 0]} receiveShadow castShadow>
+          <boxGeometry args={[16, 0.5, 70]} />
           <primitive object={floorMat} attach="material" />
         </mesh>
-        {/* Back Mezzanine joining left and right */}
+        {/* Back bridge closes the second floor while retaining the atrium. */}
         <mesh position={[0, 9.75, -30]} receiveShadow castShadow>
-          <boxGeometry args={[30, 0.5, 10]} />
+          <boxGeometry args={[18, 0.5, 10]} />
           <primitive object={floorMat} attach="material" />
         </mesh>
       </RigidBody>
 
-      {/* Mezzanine Railings */}
+      {/* Glass balcony railings frame the 30% open atrium below. */}
       <RigidBody type="fixed">
-        {/* Left inner edge railing */}
-        <mesh position={[-15, 10.5, 0]} castShadow><boxGeometry args={[0.2, 1, 70]} /><primitive object={railingMat} attach="material" /></mesh>
-        {/* Right inner edge railing */}
-        <mesh position={[15, 10.5, 0]} castShadow><boxGeometry args={[0.2, 1, 70]} /><primitive object={railingMat} attach="material" /></mesh>
-        {/* Back inner edge railing */}
-        <mesh position={[0, 10.5, -25]} castShadow><boxGeometry args={[30, 1, 0.2]} /><primitive object={railingMat} attach="material" /></mesh>
+        <mesh position={[-9, 10.7, 0]} castShadow><boxGeometry args={[0.12, 1.4, 70]} /><primitive object={glassMat} attach="material" /></mesh>
+        <mesh position={[9, 10.7, 0]} castShadow><boxGeometry args={[0.12, 1.4, 70]} /><primitive object={glassMat} attach="material" /></mesh>
+        <mesh position={[0, 10.7, -25]} castShadow><boxGeometry args={[18, 1.4, 0.12]} /><primitive object={glassMat} attach="material" /></mesh>
+
+        {[-30, -15, 0, 15, 30].map((z) => (
+          <group key={`glass-post-${z}`}>
+            <mesh position={[-9, 10.7, z]} castShadow><boxGeometry args={[0.22, 1.5, 0.22]} /><primitive object={railingMat} attach="material" /></mesh>
+            <mesh position={[9, 10.7, z]} castShadow><boxGeometry args={[0.22, 1.5, 0.22]} /><primitive object={railingMat} attach="material" /></mesh>
+          </group>
+        ))}
       </RigidBody>
 
       {/* Architectural Walls */}

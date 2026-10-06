@@ -7,10 +7,19 @@ import { useGameStore } from '../../store';
 import * as THREE from 'three';
 
 const WALK_SPEED = 5;
+const MAIN_STAIRCASE = {
+  centerX: -13,
+  startZ: 5,
+  width: 4,
+  run: 15,
+  rise: 10,
+};
 
 export const Player = () => {
   const bodyRef = useRef<RapierRigidBody>(null);
   const avatarRef = useRef<THREE.Group>(null);
+  const stairAssistActive = useRef(false);
+  const stairGroundOffset = useRef(0);
   const [, getKeys] = useKeyboardControls();
   const { joystickVector, isSeated, seatTransform } = useGameStore();
   const { camera, gl } = useThree();
@@ -132,7 +141,38 @@ export const Player = () => {
     }
 
     const direction = new THREE.Vector3(moveX, 0, moveZ).normalize().multiplyScalar(WALK_SPEED);
-    bodyRef.current.setLinvel({ x: direction.x, y: velocity.y, z: direction.z }, true);
+
+    // The avatar uses a dynamic physics body, which cannot reliably step up a
+    // tall decorative staircase. Within the stair lane, smoothly lift/lower it
+    // along the stair path so walking onto it feels automatic, like Roblox.
+    const playerPos = bodyRef.current.translation();
+    const stairProgress = (MAIN_STAIRCASE.startZ - playerPos.z) / MAIN_STAIRCASE.run;
+    const isOnMainStaircase =
+      Math.abs(playerPos.x - MAIN_STAIRCASE.centerX) < MAIN_STAIRCASE.width / 2 + 0.2 &&
+      stairProgress >= -0.1 &&
+      stairProgress <= 1.1;
+
+    if (isOnMainStaircase) {
+      const clampedProgress = THREE.MathUtils.clamp(stairProgress, 0, 1);
+      if (!stairAssistActive.current) {
+        stairGroundOffset.current = playerPos.y - clampedProgress * MAIN_STAIRCASE.rise;
+        stairAssistActive.current = true;
+      }
+
+      const targetY = stairGroundOffset.current + clampedProgress * MAIN_STAIRCASE.rise;
+      bodyRef.current.setGravityScale(0, true);
+      bodyRef.current.setTranslation(
+        { x: playerPos.x, y: THREE.MathUtils.lerp(playerPos.y, targetY, 0.35), z: playerPos.z },
+        true
+      );
+      bodyRef.current.setLinvel({ x: direction.x, y: 0, z: direction.z }, true);
+    } else {
+      if (stairAssistActive.current) {
+        bodyRef.current.setGravityScale(1, true);
+        stairAssistActive.current = false;
+      }
+      bodyRef.current.setLinvel({ x: direction.x, y: velocity.y, z: direction.z }, true);
+    }
 
     if (direction.lengthSq() > 0.1) {
       const angle = Math.atan2(direction.x, direction.z);
@@ -140,7 +180,6 @@ export const Player = () => {
       avatarRef.current.position.y = Math.abs(Math.sin(state.clock.elapsedTime * 10)) * 0.1;
     }
 
-    const playerPos = bodyRef.current.translation();
     const cameraDistance = 8;
     const cameraOffset = new THREE.Vector3(
       Math.sin(yaw) * Math.cos(pitch) * cameraDistance,
