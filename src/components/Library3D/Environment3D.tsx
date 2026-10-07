@@ -74,14 +74,14 @@ export const GlassRailing = ({ position, rotation = [0, 0, 0], length }: { posit
 };
 
 export const Environment3D = () => {
-  const wallMat = new THREE.MeshStandardMaterial({ color: '#f5eee6', roughness: 0.9 });
-  const wainscotingMat = new THREE.MeshStandardMaterial({ color: '#3d2314', roughness: 0.8 });
-  const beamMat = new THREE.MeshStandardMaterial({ color: '#2a1708', roughness: 0.9 });
-  const floorMat = new THREE.MeshStandardMaterial({ color: '#5c3a21', roughness: 0.7 });
+  const wallMat = new THREE.MeshStandardMaterial({ color: '#f0e6d2', roughness: 0.95 });
+  const wainscotingMat = new THREE.MeshStandardMaterial({ color: '#2e180d', roughness: 0.85 });
+  const beamMat = new THREE.MeshStandardMaterial({ color: '#1f1007', roughness: 0.9 });
+  const floorMat = new THREE.MeshStandardMaterial({ color: '#4a2c18', roughness: 0.6, metalness: 0.1 });
   
   return (
     <group>
-      <ambientLight intensity={0.6} color="#ffe5b4" />
+      <ambientLight intensity={0.3} color="#ffe5b4" />
       {/* Sunlight through windows */}
       <directionalLight 
         position={[30, 20, 10]} 
@@ -219,7 +219,7 @@ export const Environment3D = () => {
           <mesh material={beamMat}><cylinderGeometry args={[0.05, 0.05, 12]} /></mesh>
           <mesh position={[0, -6, 0]} material={new THREE.MeshStandardMaterial({ color: '#2c3e50' })}><cylinderGeometry args={[2, 2.5, 1]} /></mesh>
           <mesh position={[0, -6.2, 0]} material={new THREE.MeshBasicMaterial({ color: '#ffdf85' })}><sphereGeometry args={[1]} /></mesh>
-          <pointLight position={[0, -7, 0]} intensity={2.0} distance={40} color="#ffdf85" castShadow />
+          <pointLight position={[0, -7, 0]} intensity={2.0} distance={40} color="#ffdf85" castShadow shadow-bias={-0.001} />
         </group>
       ))}
 
@@ -229,7 +229,7 @@ export const Environment3D = () => {
           <mesh material={beamMat}><cylinderGeometry args={[0.02, 0.02, 8]} /></mesh>
           <mesh position={[0, -4, 0]} material={new THREE.MeshStandardMaterial({ color: '#2c3e50' })}><cylinderGeometry args={[0.8, 1, 0.5]} /></mesh>
           <mesh position={[0, -4.1, 0]} material={new THREE.MeshBasicMaterial({ color: '#ffdf85' })}><sphereGeometry args={[0.4]} /></mesh>
-          <pointLight position={[0, -4.5, 0]} intensity={1} distance={20} color="#ffdf85" castShadow />
+          <pointLight position={[0, -4.5, 0]} intensity={1} distance={20} color="#ffdf85" castShadow shadow-bias={-0.001} />
         </group>
       ))}
       {[-25, -10, 5, 20].map((z, i) => (
@@ -237,7 +237,7 @@ export const Environment3D = () => {
           <mesh material={beamMat}><cylinderGeometry args={[0.02, 0.02, 8]} /></mesh>
           <mesh position={[0, -4, 0]} material={new THREE.MeshStandardMaterial({ color: '#2c3e50' })}><cylinderGeometry args={[0.8, 1, 0.5]} /></mesh>
           <mesh position={[0, -4.1, 0]} material={new THREE.MeshBasicMaterial({ color: '#ffdf85' })}><sphereGeometry args={[0.4]} /></mesh>
-          <pointLight position={[0, -4.5, 0]} intensity={1} distance={20} color="#ffdf85" castShadow />
+          <pointLight position={[0, -4.5, 0]} intensity={1} distance={20} color="#ffdf85" castShadow shadow-bias={-0.001} />
         </group>
       ))}
       {[-10, 10].map((x, i) => (
@@ -245,7 +245,7 @@ export const Environment3D = () => {
           <mesh material={beamMat}><cylinderGeometry args={[0.02, 0.02, 8]} /></mesh>
           <mesh position={[0, -4, 0]} material={new THREE.MeshStandardMaterial({ color: '#2c3e50' })}><cylinderGeometry args={[0.8, 1, 0.5]} /></mesh>
           <mesh position={[0, -4.1, 0]} material={new THREE.MeshBasicMaterial({ color: '#ffdf85' })}><sphereGeometry args={[0.4]} /></mesh>
-          <pointLight position={[0, -4.5, 0]} intensity={1} distance={20} color="#ffdf85" castShadow />
+          <pointLight position={[0, -4.5, 0]} intensity={1} distance={20} color="#ffdf85" castShadow shadow-bias={-0.001} />
         </group>
       ))}
       {[-10, 10].map((x, i) => (
@@ -253,7 +253,7 @@ export const Environment3D = () => {
           <mesh material={beamMat}><cylinderGeometry args={[0.02, 0.02, 8]} /></mesh>
           <mesh position={[0, -4, 0]} material={new THREE.MeshStandardMaterial({ color: '#2c3e50' })}><cylinderGeometry args={[0.8, 1, 0.5]} /></mesh>
           <mesh position={[0, -4.1, 0]} material={new THREE.MeshBasicMaterial({ color: '#ffdf85' })}><sphereGeometry args={[0.4]} /></mesh>
-          <pointLight position={[0, -4.5, 0]} intensity={1} distance={20} color="#ffdf85" castShadow />
+          <pointLight position={[0, -4.5, 0]} intensity={1} distance={20} color="#ffdf85" castShadow shadow-bias={-0.001} />
         </group>
       ))}
 

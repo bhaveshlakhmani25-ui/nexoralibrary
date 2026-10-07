@@ -159,10 +159,16 @@ export const Player = () => {
         stairAssistActive.current = true;
       }
 
-      const targetY = stairGroundOffset.current + clampedProgress * MAIN_STAIRCASE.rise;
+      const expectedY = stairGroundOffset.current + clampedProgress * MAIN_STAIRCASE.rise;
+      
+      let clampedX = playerPos.x;
+      const xMargin = MAIN_STAIRCASE.width / 2 - 0.3;
+      if (clampedX < MAIN_STAIRCASE.centerX - xMargin) clampedX = MAIN_STAIRCASE.centerX - xMargin;
+      if (clampedX > MAIN_STAIRCASE.centerX + xMargin) clampedX = MAIN_STAIRCASE.centerX + xMargin;
+
       bodyRef.current.setGravityScale(0, true);
       bodyRef.current.setTranslation(
-        { x: playerPos.x, y: THREE.MathUtils.lerp(playerPos.y, targetY, 0.35), z: playerPos.z },
+        { x: clampedX, y: THREE.MathUtils.lerp(playerPos.y, expectedY, 0.4), z: playerPos.z },
         true
       );
       bodyRef.current.setLinvel({ x: direction.x, y: 0, z: direction.z }, true);

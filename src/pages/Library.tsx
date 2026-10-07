@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { KeyboardControls } from '@react-three/drei';
+import { KeyboardControls, Environment, SoftShadows } from '@react-three/drei';
 import { Physics } from '@react-three/rapier';
 import { Player } from '../components/Library3D/Player';
 import { Environment3D } from '../components/Library3D/Environment3D';
@@ -20,6 +20,9 @@ const Library = () => {
       >
         <Canvas shadows camera={{ position: [0, 5, 30], fov: 60 }}>
           <color attach="background" args={['#1a100b']} />
+          <fog attach="fog" args={['#1a100b', 20, 80]} />
+          <SoftShadows size={15} samples={10} focus={0.5} />
+          <Environment preset="sunset" />
           <Suspense fallback={null}>
             <Physics>
               <Environment3D />

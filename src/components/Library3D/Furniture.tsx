@@ -3,21 +3,21 @@ import { RigidBody, CuboidCollider } from '@react-three/rapier';
 import { useGameStore } from '../../store';
 import * as THREE from 'three';
 
-const darkWood = new THREE.MeshStandardMaterial({ color: '#3d2314', roughness: 0.8 });
-const lightWood = new THREE.MeshStandardMaterial({ color: '#8b5a2b', roughness: 0.7 });
-const fabricGreen = new THREE.MeshStandardMaterial({ color: '#2d4c36', roughness: 0.9 });
-const fabricCaramel = new THREE.MeshStandardMaterial({ color: '#c17a3f', roughness: 0.9 });
-const fabricNavy = new THREE.MeshStandardMaterial({ color: '#1a365d', roughness: 0.9 });
-const lampGold = new THREE.MeshStandardMaterial({ color: '#d4af37', metalness: 0.6, roughness: 0.2 });
-const paperMat = new THREE.MeshStandardMaterial({ color: '#fdf6e3' });
-const leafMat = new THREE.MeshStandardMaterial({ color: '#4a7c59', roughness: 0.8 });
-const potMat = new THREE.MeshStandardMaterial({ color: '#d35400', roughness: 0.9 });
+const darkWood = new THREE.MeshStandardMaterial({ color: '#2e180d', roughness: 0.9, metalness: 0.1 });
+const lightWood = new THREE.MeshStandardMaterial({ color: '#6b4226', roughness: 0.8, metalness: 0.05 });
+const fabricGreen = new THREE.MeshStandardMaterial({ color: '#2d4c36', roughness: 0.95 });
+const fabricCaramel = new THREE.MeshStandardMaterial({ color: '#c17a3f', roughness: 0.95 });
+const fabricNavy = new THREE.MeshStandardMaterial({ color: '#1a365d', roughness: 0.95 });
+const lampGold = new THREE.MeshStandardMaterial({ color: '#d4af37', metalness: 0.8, roughness: 0.3 });
+const paperMat = new THREE.MeshStandardMaterial({ color: '#fdf6e3', roughness: 1 });
+const leafMat = new THREE.MeshStandardMaterial({ color: '#3a5f45', roughness: 0.9 });
+const potMat = new THREE.MeshStandardMaterial({ color: '#a04825', roughness: 0.95 });
 const frameMat = new THREE.MeshStandardMaterial({ color: '#111111', roughness: 0.8 });
 const canvasMat = new THREE.MeshStandardMaterial({ color: '#ecf0f1', roughness: 1 });
 
-const bookColors = ['#c0392b', '#2980b9', '#27ae60', '#8e44ad', '#f39c12', '#16a085', '#2c3e50', '#d35400', '#7f8c8d'];
+const bookColors = ['#8a3a3a', '#314859', '#486049', '#614266', '#a87232', '#3d5e56', '#444444', '#8c4e2a', '#6b6863'];
 
-const randomBookColor = () => new THREE.MeshStandardMaterial({ color: bookColors[Math.floor(Math.random() * bookColors.length)] });
+const randomBookColor = () => new THREE.MeshStandardMaterial({ color: bookColors[Math.floor(Math.random() * bookColors.length)], roughness: 0.6 });
 
 const generateBooks = (count: number, shelfWidth: number, yPos: number, zPos: number) => {
   const elements = [];
@@ -304,15 +304,14 @@ export const GrandStaircase = ({ position, rotation = [0,0,0] }: { position: [nu
   
   return (
     <group position={position} rotation={rotation}>
-      {/* Explicit walkable ramp collider. The visible steps stay decorative,
-          while this smooth surface gives the player Roblox-like stair movement. */}
-      <RigidBody type="fixed" colliders={false}>
-        <CuboidCollider
-          args={[width / 2, 0.15, rampLength / 2]}
-          position={[0, totalHeight / 2, -totalDepth / 2]}
-          rotation={[rampAngle, 0, 0]}
-          friction={1}
-        />
+      {/* Invisible walls to keep player perfectly centred on stairs */}
+      <RigidBody type="fixed" colliders="cuboid">
+        <mesh position={[-width / 2, totalHeight / 2, -totalDepth / 2]} rotation={[rampAngle, 0, 0]} visible={false}>
+          <boxGeometry args={[0.2, 5, rampLength]} />
+        </mesh>
+        <mesh position={[width / 2, totalHeight / 2, -totalDepth / 2]} rotation={[rampAngle, 0, 0]} visible={false}>
+          <boxGeometry args={[0.2, 5, rampLength]} />
+        </mesh>
       </RigidBody>
 
       {/* Visual steps */}
