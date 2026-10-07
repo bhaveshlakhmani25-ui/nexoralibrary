@@ -21,7 +21,7 @@ export const Player = () => {
   const stairAssistActive = useRef(false);
   const stairGroundOffset = useRef(0);
   const [, getKeys] = useKeyboardControls();
-  const { joystickVector, isSeated, seatTransform } = useGameStore();
+  const { joystickVector, isSeated, seatTransform, resetTrigger } = useGameStore();
   const { camera, gl } = useThree();
 
   const [yaw, setYaw] = useState(0);
@@ -71,6 +71,15 @@ export const Player = () => {
       gl.domElement.removeEventListener('touchmove', onTouchMove);
     };
   }, [isSeated, gl.domElement]);
+
+  useEffect(() => {
+    if (resetTrigger > 0 && bodyRef.current) {
+      bodyRef.current.setTranslation({ x: 0, y: 2, z: 25 }, true);
+      bodyRef.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      setYaw(0);
+      setPitch(0);
+    }
+  }, [resetTrigger]);
 
   // A seated player is kinematic so the chair/table colliders cannot push the
   // avatar away (the source of the jumpy, stuck-on-chair behaviour).
@@ -193,6 +202,9 @@ export const Player = () => {
       Math.cos(yaw) * Math.cos(pitch) * cameraDistance
     );
     const targetCameraPos = new THREE.Vector3(playerPos.x, playerPos.y, playerPos.z).add(cameraOffset);
+    if (targetCameraPos.y < playerPos.y + 1.5) {
+      targetCameraPos.y = playerPos.y + 1.5;
+    }
     camera.position.lerp(targetCameraPos, 0.1);
     camera.lookAt(playerPos.x, playerPos.y + 1.1, playerPos.z);
   });

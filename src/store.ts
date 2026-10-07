@@ -32,6 +32,8 @@ export interface GameState {
   setJoystickVector: (v: { x: number; y: number }) => void;
   ambientSoundOn: boolean;
   setAmbientSound: (on: boolean) => void;
+  resetTrigger: number;
+  triggerReset: () => void;
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -84,4 +86,7 @@ export const useGameStore = create<GameState>((set) => ({
   setJoystickVector: (v) => set({ joystickVector: v }),
   ambientSoundOn: false,
   setAmbientSound: (on) => set({ ambientSoundOn: on }),
+
+  resetTrigger: 0,
+  triggerReset: () => set((state) => ({ resetTrigger: state.resetTrigger + 1, isSeated: false, sessionState: 'idle' })),
 }));

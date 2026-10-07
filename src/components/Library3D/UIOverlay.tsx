@@ -7,7 +7,7 @@ export const UIOverlay = () => {
     nearTable, isSeated, setSeated, sessionState,
     timeRemaining, timerActive, setStudySession, tickTimer, toggleTimer, endSession,
     bookCategory, setBookCategory,
-    setJoystickVector, ambientSoundOn, setAmbientSound
+    setJoystickVector, ambientSoundOn, setAmbientSound, triggerReset
   } = useGameStore();
 
   const [showHints, setShowHints] = useState(true);
@@ -68,15 +68,28 @@ export const UIOverlay = () => {
             </h1>
           </div>
 
-          <button 
-            style={{ 
-              background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: '8px',
-              textShadow: '0 2px 4px rgba(0,0,0,0.5)'
-            }} 
-            onClick={() => setAmbientSound(!ambientSoundOn)}
-          >
-            {ambientSoundOn ? <Volume2 size={24} /> : <VolumeX size={24} />}
-          </button>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <button
+              style={{
+                background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)',
+                color: '#fff', cursor: 'pointer', padding: '8px 16px', borderRadius: '16px',
+                backdropFilter: 'blur(4px)', textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                fontWeight: 'bold', fontSize: '0.9rem'
+              }}
+              onClick={() => triggerReset()}
+            >
+              Reset View
+            </button>
+            <button 
+              style={{ 
+                background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: '8px',
+                textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+              }} 
+              onClick={() => setAmbientSound(!ambientSoundOn)}
+            >
+              {ambientSoundOn ? <Volume2 size={24} /> : <VolumeX size={24} />}
+            </button>
+          </div>
         </div>
       )}
 

@@ -19,8 +19,7 @@ const Library = () => {
         ]}
       >
         <Canvas shadows camera={{ position: [0, 5, 30], fov: 60 }}>
-          <color attach="background" args={['#1a100b']} />
-          <fog attach="fog" args={['#1a100b', 20, 80]} />
+          <color attach="background" args={['#f0e6d2']} />
           <SoftShadows size={15} samples={10} focus={0.5} />
           <Environment preset="sunset" />
           <Suspense fallback={null}>

@@ -97,8 +97,8 @@ export const Environment3D = () => {
 
       {/* Ground Floor */}
       <RigidBody type="fixed">
-        <mesh receiveShadow position={[0, -0.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[80, 80]} />
+        <mesh receiveShadow position={[0, -1.0, 0]}>
+          <boxGeometry args={[80, 1, 80]} />
           <primitive object={floorMat} attach="material" />
         </mesh>
       </RigidBody>
@@ -114,23 +114,29 @@ export const Environment3D = () => {
       </mesh>
 
       {/* Upper Floor (70% coverage) */}
+      {/* Left Upper Floor */}
       <RigidBody type="fixed">
-        {/* Left Upper Floor */}
         <mesh position={[-18.5, 9.75, 0]} receiveShadow castShadow>
           <boxGeometry args={[13, 0.5, 70]} />
           <primitive object={floorMat} attach="material" />
         </mesh>
-        {/* Right Upper Floor */}
+      </RigidBody>
+      {/* Right Upper Floor */}
+      <RigidBody type="fixed">
         <mesh position={[18.5, 9.75, 0]} receiveShadow castShadow>
           <boxGeometry args={[13, 0.5, 70]} />
           <primitive object={floorMat} attach="material" />
         </mesh>
-        {/* Front Upper Floor (Over Entrance) */}
+      </RigidBody>
+      {/* Front Upper Floor (Over Entrance) */}
+      <RigidBody type="fixed">
         <mesh position={[0, 9.75, 27.5]} receiveShadow castShadow>
           <boxGeometry args={[24, 0.5, 15]} />
           <primitive object={floorMat} attach="material" />
         </mesh>
-        {/* Back Upper Floor */}
+      </RigidBody>
+      {/* Back Upper Floor */}
+      <RigidBody type="fixed">
         <mesh position={[0, 9.75, -27.5]} receiveShadow castShadow>
           <boxGeometry args={[24, 0.5, 15]} />
           <primitive object={floorMat} attach="material" />
@@ -166,14 +172,14 @@ export const Environment3D = () => {
       <GlassRailing position={[0, 10, -20]} rotation={[0, 0, 0]} length={24} />
 
       {/* Architectural Walls */}
-      <RigidBody type="fixed">
+      <group>
         {/* Left Wall */}
-        <mesh position={[-25, 15, 0]} receiveShadow material={wallMat}><boxGeometry args={[1, 30, 70]} /></mesh>
+        <RigidBody type="fixed"><mesh position={[-25, 15, 0]} receiveShadow material={wallMat}><boxGeometry args={[1, 30, 70]} /></mesh></RigidBody>
         <mesh position={[-24.4, 1.5, 0]} receiveShadow material={wainscotingMat}><boxGeometry args={[0.2, 3, 70]} /></mesh>
         <mesh position={[-24.4, 11.5, 0]} receiveShadow material={wainscotingMat}><boxGeometry args={[0.2, 3, 70]} /></mesh>
         
         {/* Right Wall with Windows */}
-        <mesh position={[25, 15, 0]} receiveShadow material={wallMat}><boxGeometry args={[1, 30, 70]} /></mesh>
+        <RigidBody type="fixed"><mesh position={[25, 15, 0]} receiveShadow material={wallMat}><boxGeometry args={[1, 30, 70]} /></mesh></RigidBody>
         <mesh position={[24.4, 1.5, 0]} receiveShadow material={wainscotingMat}><boxGeometry args={[0.2, 3, 70]} /></mesh>
         <mesh position={[24.4, 11.5, 0]} receiveShadow material={wainscotingMat}><boxGeometry args={[0.2, 3, 70]} /></mesh>
         
@@ -191,15 +197,15 @@ export const Environment3D = () => {
         ))}
 
         {/* Back Wall */}
-        <mesh position={[0, 15, -35]} receiveShadow material={wallMat}><boxGeometry args={[50, 30, 1]} /></mesh>
+        <RigidBody type="fixed"><mesh position={[0, 15, -35]} receiveShadow material={wallMat}><boxGeometry args={[50, 30, 1]} /></mesh></RigidBody>
         <mesh position={[0, 1.5, -34.4]} receiveShadow material={wainscotingMat}><boxGeometry args={[50, 3, 0.2]} /></mesh>
         <mesh position={[0, 11.5, -34.4]} receiveShadow material={wainscotingMat}><boxGeometry args={[50, 3, 0.2]} /></mesh>
         
         {/* Front Wall */}
-        <mesh position={[0, 15, 35]} receiveShadow material={wallMat}><boxGeometry args={[50, 30, 1]} /></mesh>
+        <RigidBody type="fixed"><mesh position={[0, 15, 35]} receiveShadow material={wallMat}><boxGeometry args={[50, 30, 1]} /></mesh></RigidBody>
         <mesh position={[0, 1.5, 34.4]} receiveShadow material={wainscotingMat}><boxGeometry args={[50, 3, 0.2]} /></mesh>
         <mesh position={[0, 11.5, 34.4]} receiveShadow material={wainscotingMat}><boxGeometry args={[50, 3, 0.2]} /></mesh>
-      </RigidBody>
+      </group>
 
       {/* Roof / Ceiling */}
       <RigidBody type="fixed">
@@ -257,7 +263,7 @@ export const Environment3D = () => {
         </group>
       ))}
 
-      <DustParticles />
+      {/* DustParticles removed for now */}
     </group>
   );
 };
