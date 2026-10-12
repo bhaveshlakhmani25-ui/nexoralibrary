@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useGameStore } from '../../store';
-import { LogOut, Volume2, VolumeX, BookOpen, Clock, Info, Pause, Play, X } from 'lucide-react';
+import { LogOut, Volume2, VolumeX, BookOpen, Clock, Info, Pause, Play, X, Library } from 'lucide-react';
+import { BookReader, CarryingChip, CatalogBrowser, ShelfBookCard, SpineHoverLabel } from './BookUI';
 
 export const UIOverlay = () => {
   const { 
     nearTable, isSeated, setSeated, sessionState,
     timeRemaining, timerActive, setStudySession, tickTimer, toggleTimer, endSession,
-    bookCategory, setBookCategory,
+    currentBook, startReading, setSessionState, catalogOpen, setCatalogOpen, shelfSelection, setShelfSelection,
     setJoystickVector, ambientSoundOn, setAmbientSound, triggerReset
   } = useGameStore();
 
@@ -19,19 +20,24 @@ export const UIOverlay = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Handle E key and Escape
+  // Handle E key and Escape. Escape closes the top-most panel first: the
+  // catalogue, then a shelf card, then the open book, then stands up.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement) return;
       if (e.key.toLowerCase() === 'e' && nearTable !== null && !isSeated) {
         setSeated(true, nearTable.transform);
       }
-      if (e.key === 'Escape' && isSeated) {
-        endSession();
+      if (e.key === 'Escape') {
+        if (catalogOpen) setCatalogOpen(false);
+        else if (shelfSelection) setShelfSelection(null);
+        else if (isSeated && sessionState === 'reading') setSessionState('choosing');
+        else if (isSeated) endSession();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [nearTable, isSeated, setSeated, endSession]);
+  }, [nearTable, isSeated, setSeated, endSession, catalogOpen, setCatalogOpen, shelfSelection, setShelfSelection, sessionState, setSessionState]);
 
   // Timer Tick
   useEffect(() => {
@@ -104,15 +110,25 @@ export const UIOverlay = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ffdf85', fontWeight: 'bold', marginBottom: '4px' }}>
             <Info size={18} /> Welcome to Nexora
           </div>
-          <div style={{ fontSize: '0.9rem' }}>• Use <strong style={{ color: '#ffdf85' }}>WASD</strong> or <strong style={{ color: '#ffdf85' }}>Arrows</strong> to move.</div>
-          {!isTouchDevice && <div style={{ fontSize: '0.9rem' }}>• Click and drag to look around.</div>}
+          {isTouchDevice ? (
+            <>
+              <div style={{ fontSize: '0.9rem' }}>• Use the <strong style={{ color: '#ffdf85' }}>joystick</strong> to move.</div>
+              <div style={{ fontSize: '0.9rem' }}>• Drag the screen to look around.</div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: '0.9rem' }}>• <strong style={{ color: '#ffdf85' }}>WASD</strong> to move, <strong style={{ color: '#ffdf85' }}>Space</strong> to jump, <strong style={{ color: '#ffdf85' }}>Shift</strong> to sprint.</div>
+              <div style={{ fontSize: '0.9rem' }}>• Drag to look around, <strong style={{ color: '#ffdf85' }}>scroll</strong> to zoom.</div>
+            </>
+          )}
           <div style={{ fontSize: '0.9rem' }}>• Walk onto stairs to climb to the upper gallery.</div>
-          <div style={{ fontSize: '0.9rem' }}>• Walk near a table to interact.</div>
+          <div style={{ fontSize: '0.9rem' }}>• Walk up to a seat and press <strong style={{ color: '#ffdf85' }}>E</strong> to sit.</div>
         </div>
       )}
 
       {/* Interaction Prompt (Standing) */}
-      {nearTable !== null && !isSeated && (
+      {/* Desktop uses the prompt floating above the seat; touch keeps a large button */}
+      {nearTable !== null && !isSeated && isTouchDevice && (
         <div style={{
           position: 'absolute', bottom: '20%', left: '50%', transform: 'translateX(-50%)', pointerEvents: 'auto'
         }}>
@@ -153,8 +169,16 @@ export const UIOverlay = () => {
               <BookOpen size={20} /> Read Mode
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <button className="btn-3d secondary" style={{ padding: '6px' }} onClick={() => setBookCategory('Fantasy')}>Fantasy</button>
-              <button className="btn-3d secondary" style={{ padding: '6px' }} onClick={() => setBookCategory('Biography')}>Biography</button>
+              {currentBook ? (
+                <button className="btn-3d secondary" style={{ padding: '6px' }} onClick={() => startReading()}>
+                  Read “{currentBook.title.length > 28 ? `${currentBook.title.slice(0, 27)}…` : currentBook.title}”
+                </button>
+              ) : (
+                <span style={{ fontSize: '0.85rem', color: '#555' }}>Pick a book from any shelf, or browse the catalogue.</span>
+              )}
+              <button className="btn-3d secondary" style={{ padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }} onClick={() => setCatalogOpen(true)}>
+                <Library size={16} /> {currentBook ? 'Change book' : 'Browse catalogue'}
+              </button>
             </div>
           </div>
           
@@ -186,27 +210,15 @@ export const UIOverlay = () => {
         </div>
       )}
 
-      {/* SEATED UI: Reading (Book Overlay) */}
-      {isSeated && sessionState === 'reading' && bookCategory && (
-        <div style={{ position: 'absolute', top: '10%', left: '50%', transform: 'translateX(-50%)', pointerEvents: 'auto', width: '80%', maxWidth: '800px', height: '80%' }}>
-          <div className="glass" style={{ width: '100%', height: '100%', backgroundColor: 'rgba(253, 246, 227, 0.95)', padding: '3rem', overflowY: 'auto', display: 'flex', gap: '2rem' }}>
-            <button onClick={endSession} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', cursor: 'pointer', color: '#555' }}>
-              <X size={24} />
-            </button>
-            
-            {/* Fake Book Pages */}
-            <div style={{ flex: 1, borderRight: '1px solid #ddd', paddingRight: '2rem', fontFamily: 'Georgia, serif', color: '#2c3e50', lineHeight: 1.8 }}>
-              <h2 style={{ marginBottom: '1.5rem' }}>{bookCategory} Chapter 1</h2>
-              <p>The library smelled of old paper and rain. Students sat quietly in the soft glow of amber lamps, deeply immersed in their own worlds. Nexora was more than just a place to study; it was a sanctuary for the focused mind.</p>
-              <p>Every wooden desk held a story, and every ticking timer was a promise of progress. As the dust motes danced in the sunlight, the silence felt heavy yet comforting.</p>
-            </div>
-            <div style={{ flex: 1, fontFamily: 'Georgia, serif', color: '#2c3e50', lineHeight: 1.8 }}>
-              <p>It was here that the greatest ideas were born. Not in loud, chaotic halls, but in the quiet corners of the world, where one could sit down, open a book, and let the mind wander through the vast expanse of knowledge.</p>
-              <p>The pages turned with a soft rustle, the only sound accompanying the distant tapping of a keyboard. This was the magic of the library. This was Nexora.</p>
-            </div>
-          </div>
-        </div>
+      {/* SEATED UI: Reading the chosen book */}
+      {isSeated && sessionState === 'reading' && currentBook && (
+        <BookReader book={currentBook} onClose={() => setSessionState('choosing')} />
       )}
+
+      <SpineHoverLabel />
+      <ShelfBookCard />
+      <CarryingChip />
+      {isSeated && <CatalogBrowser />}
 
       {/* Sit/Drag Hint */}
       {isSeated && sessionState === 'choosing' && (

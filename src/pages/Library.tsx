@@ -1,11 +1,40 @@
-import { Suspense } from 'react';
+import { Component, Suspense, type ReactNode } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { KeyboardControls, Environment, SoftShadows } from '@react-three/drei';
 import { Physics } from '@react-three/rapier';
 import { Player } from '../components/Library3D/Player';
-import { Environment3D } from '../components/Library3D/Environment3D';
-import { Bookshelf, IndividualDesk, GroupTable, ReadingNook, ReceptionDesk, GrandStaircase, LargePlant, WallArt } from '../components/Library3D/Furniture';
+import { LongRoom } from '../components/Library3D/LongRoom';
+import { SectionShelves } from '../components/Library3D/SectionShelves';
+import { ALCOVE_ZS, LONG_ROOM_STAIRS } from '../components/Library3D/longRoomLayout';
+import { IndividualDesk, GroupTable, ReceptionDesk, GrandStaircase, SeatPrompt } from '../components/Library3D/Furniture';
 import { UIOverlay } from '../components/Library3D/UIOverlay';
+
+const DESK_ALCOVES = ALCOVE_ZS.filter((_, i) => i % 2 === 0);
+
+// Without this, any WebGL or shader failure inside the Canvas leaves a silent
+// black screen.
+class SceneErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null as Error | null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: '#f0e6d2', padding: '1rem', textAlign: 'center' }}>
+          <div>
+            <h2 style={{ fontFamily: 'Georgia, serif' }}>The library couldn't load</h2>
+            <p style={{ opacity: 0.8 }}>{this.state.error.message}</p>
+            <button className="btn-3d" onClick={() => window.location.reload()}>Try again</button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const Library = () => {
   return (
@@ -16,97 +45,50 @@ const Library = () => {
           { name: 'backward', keys: ['ArrowDown', 'KeyS'] },
           { name: 'left', keys: ['ArrowLeft', 'KeyA'] },
           { name: 'right', keys: ['ArrowRight', 'KeyD'] },
+          { name: 'jump', keys: ['Space'] },
+          { name: 'sprint', keys: ['ShiftLeft', 'ShiftRight'] },
         ]}
       >
-        <Canvas shadows camera={{ position: [0, 5, 30], fov: 60 }}>
+        <SceneErrorBoundary>
+        <Canvas shadows camera={{ position: [1.5, 5, 32], fov: 60 }}>
           <color attach="background" args={['#f0e6d2']} />
           <SoftShadows size={15} samples={10} focus={0.5} />
-          <Environment preset="sunset" />
+          {/* The HDR is fetched from a CDN; its own Suspense keeps the room
+              visible while it loads (or if it never does). */}
+          <Suspense fallback={null}>
+            <Environment preset="sunset" />
+          </Suspense>
           <Suspense fallback={null}>
             <Physics>
-              <Environment3D />
-              
-              {/* === GROUND FLOOR === */}
-              {/* Entrance Zone */}
-              <ReceptionDesk position={[10, 0, 20]} rotation={[0, -Math.PI / 6, 0]} />
-              <LargePlant position={[-10, 0, 22]} />
-              <WallArt position={[-24.4, 4, 15]} rotation={[0, Math.PI / 2, 0]} />
+              <LongRoom />
+              <SectionShelves />
+              <SeatPrompt />
 
-              {/* Grand Staircase to Mezzanine (Left Side) */}
-              <GrandStaircase position={[-13, 0, 5]} />
+              {/* Entrance: the librarian's desk under the end gallery */}
+              <ReceptionDesk position={[5.8, 0, 30]} rotation={[0, -Math.PI / 2, 0]} />
+              <GrandStaircase
+                position={[LONG_ROOM_STAIRS.centerX, 0, LONG_ROOM_STAIRS.startZ]}
+                rotation={[0, Math.PI, 0]}
+                steps={12} stepHeight={0.5} stepDepth={1} width={LONG_ROOM_STAIRS.width}
+              />
 
-              {/* Left Side Ground (Under Mezzanine) */}
-              <Bookshelf position={[-24, 0, 5]} rotation={[0, Math.PI / 2, 0]} label="Fiction" />
-              <Bookshelf position={[-24, 0, -5]} rotation={[0, Math.PI / 2, 0]} label="Fantasy" />
-              <Bookshelf position={[-24, 0, -15]} rotation={[0, Math.PI / 2, 0]} label="Sci-Fi" />
-              
-              <IndividualDesk id={1} position={[-18, 0, 5]} rotation={[0, Math.PI / 2, 0]} />
-              <IndividualDesk id={2} position={[-18, 0, -5]} rotation={[0, Math.PI / 2, 0]} />
-              <IndividualDesk id={3} position={[-18, 0, -15]} rotation={[0, Math.PI / 2, 0]} />
+              {/* Quiet study desks facing the windows in every other alcove */}
+              {DESK_ALCOVES.map((z, i) => (
+                <IndividualDesk key={`l-${z}`} id={i * 2 + 1} position={[-7.6, 0, z]} rotation={[0, Math.PI / 2, 0]} />
+              ))}
+              {DESK_ALCOVES.map((z, i) => (
+                <IndividualDesk key={`r-${z}`} id={i * 2 + 2} position={[7.6, 0, z]} rotation={[0, -Math.PI / 2, 0]} />
+              ))}
 
-              {/* Right Side Ground (Under Mezzanine) */}
-              <Bookshelf position={[24, 0, 15]} rotation={[0, -Math.PI / 2, 0]} label="Biography" />
-              <Bookshelf position={[24, 0, 5]} rotation={[0, -Math.PI / 2, 0]} label="History" />
-              <Bookshelf position={[24, 0, -5]} rotation={[0, -Math.PI / 2, 0]} label="Science" />
-              <Bookshelf position={[24, 0, -15]} rotation={[0, -Math.PI / 2, 0]} label="Art" />
-
-              <GroupTable id={4} position={[18, 0, 10]} />
-              <GroupTable id={5} position={[18, 0, -10]} />
-
-              {/* Back Ground (Under Mezzanine) */}
-              <Bookshelf position={[-10, 0, -34]} rotation={[0, 0, 0]} label="Philosophy" />
-              <Bookshelf position={[10, 0, -34]} rotation={[0, 0, 0]} label="Psychology" />
-              <ReadingNook id={6} position={[0, 0, -30]} />
-              <LargePlant position={[-14, 0, -32]} />
-              <LargePlant position={[14, 0, -32]} />
-
-              {/* === MEZZANINE UPPER GALLERY (Y = 10) === */}
-              {/* Left Gallery */}
-              <Bookshelf position={[-24, 10, 15]} rotation={[0, Math.PI / 2, 0]} label="Classics" />
-              <Bookshelf position={[-24, 10, 5]} rotation={[0, Math.PI / 2, 0]} label="Poetry" />
-              <Bookshelf position={[-24, 10, -5]} rotation={[0, Math.PI / 2, 0]} label="Drama" />
-              <Bookshelf position={[-24, 10, -15]} rotation={[0, Math.PI / 2, 0]} label="Mythology" />
-              
-              <IndividualDesk id={7} position={[-15, 10, 15]} rotation={[0, Math.PI / 2, 0]} />
-              <IndividualDesk id={8} position={[-15, 10, 5]} rotation={[0, Math.PI / 2, 0]} />
-              <IndividualDesk id={9} position={[-15, 10, -5]} rotation={[0, Math.PI / 2, 0]} />
-              <IndividualDesk id={10} position={[-15, 10, -15]} rotation={[0, Math.PI / 2, 0]} />
-              <WallArt position={[-24.4, 14, 10]} rotation={[0, Math.PI / 2, 0]} />
-              <WallArt position={[-24.4, 14, -10]} rotation={[0, Math.PI / 2, 0]} />
-              <LargePlant position={[-22, 10, 0]} />
-
-              {/* Right Gallery */}
-              <Bookshelf position={[24, 10, 15]} rotation={[0, -Math.PI / 2, 0]} label="Law" />
-              <Bookshelf position={[24, 10, 5]} rotation={[0, -Math.PI / 2, 0]} label="Business" />
-              <Bookshelf position={[24, 10, -5]} rotation={[0, -Math.PI / 2, 0]} label="Medicine" />
-              <Bookshelf position={[24, 10, -15]} rotation={[0, -Math.PI / 2, 0]} label="Engineering" />
-              
-              <IndividualDesk id={11} position={[15, 10, 15]} rotation={[0, -Math.PI / 2, 0]} />
-              <IndividualDesk id={12} position={[15, 10, 5]} rotation={[0, -Math.PI / 2, 0]} />
-              <IndividualDesk id={13} position={[15, 10, -5]} rotation={[0, -Math.PI / 2, 0]} />
-              <IndividualDesk id={14} position={[15, 10, -15]} rotation={[0, -Math.PI / 2, 0]} />
-              <WallArt position={[24.4, 14, 0]} rotation={[0, -Math.PI / 2, 0]} />
-              <LargePlant position={[22, 10, 10]} />
-
-              {/* Back Gallery */}
-              <Bookshelf position={[-8, 10, -34]} rotation={[0, 0, 0]} label="Rare Books" />
-              <Bookshelf position={[8, 10, -34]} rotation={[0, 0, 0]} label="Archives" />
-              <ReadingNook id={15} position={[-18.5, 10, -30]} rotation={[0, Math.PI/2, 0]} />
-              <ReadingNook id={16} position={[18.5, 10, -30]} rotation={[0, -Math.PI/2, 0]} />
-              <GroupTable id={17} position={[0, 10, -28]} />
-
-              {/* Front Gallery (Over Entrance) */}
-              <Bookshelf position={[-8, 10, 34]} rotation={[0, Math.PI, 0]} label="New Arrivals" />
-              <Bookshelf position={[8, 10, 34]} rotation={[0, Math.PI, 0]} label="Periodicals" />
-              <ReadingNook id={18} position={[-18.5, 10, 28]} rotation={[0, Math.PI/2, 0]} />
-              <ReadingNook id={19} position={[18.5, 10, 28]} rotation={[0, -Math.PI/2, 0]} />
-              <IndividualDesk id={20} position={[-5, 10, 23]} rotation={[0, Math.PI, 0]} />
-              <IndividualDesk id={21} position={[5, 10, 23]} rotation={[0, Math.PI, 0]} />
+              {/* Group study tables at the far end of the hall */}
+              <GroupTable id={101} position={[0, 0, -27]} />
+              <GroupTable id={102} position={[0, 0, -19]} />
 
               <Player />
             </Physics>
           </Suspense>
         </Canvas>
+        </SceneErrorBoundary>
       </KeyboardControls>
 
       <UIOverlay />
