@@ -1,8 +1,11 @@
 import { create } from 'zustand';
+import type { CatalogBook } from './library/catalog';
+import type { ShelfSpot } from './library/shelves';
 
 export interface GameState {
   nearTable: { id: number, transform: { pos: [number, number, number], rot: [number, number, number] } } | null;
   setNearTable: (table: { id: number, transform: { pos: [number, number, number], rot: [number, number, number] } } | null) => void;
+  clearNearTable: (id: number) => void;
   
   // Seated Experience
   isSeated: boolean;
@@ -21,9 +24,18 @@ export interface GameState {
   tickTimer: () => void;
   toggleTimer: () => void;
   
-  // Reading
-  bookCategory: string | null;
-  setBookCategory: (category: string | null) => void;
+  // Reading: the book the player is carrying (and reads when seated)
+  currentBook: CatalogBook | null;
+  setCurrentBook: (book: CatalogBook | null) => void;
+  startReading: (book?: CatalogBook) => void;
+  // A spine the player clicked on a shelf, shown as a details card
+  shelfSelection: { book: CatalogBook, spot: ShelfSpot } | null;
+  setShelfSelection: (selection: { book: CatalogBook, spot: ShelfSpot } | null) => void;
+  hoveredSpine: CatalogBook | null;
+  setHoveredSpine: (book: CatalogBook | null) => void;
+  // Catalogue browser for changing books from the table
+  catalogOpen: boolean;
+  setCatalogOpen: (open: boolean) => void;
 
   // Global actions
   endSession: () => void;
@@ -39,6 +51,9 @@ export interface GameState {
 export const useGameStore = create<GameState>((set) => ({
   nearTable: null,
   setNearTable: (table) => set({ nearTable: table }),
+  // Only clear when leaving the seat that is currently prompted; sensors can
+  // overlap, and leaving one must not hide the prompt of the one still entered.
+  clearNearTable: (id) => set((state) => (state.nearTable?.id === id ? { nearTable: null } : state)),
   
   isSeated: false,
   seatTransform: null,
@@ -70,8 +85,19 @@ export const useGameStore = create<GameState>((set) => ({
   }),
   toggleTimer: () => set((state) => ({ timerActive: !state.timerActive })),
   
-  bookCategory: null,
-  setBookCategory: (category) => set({ bookCategory: category, sessionState: 'reading' }),
+  currentBook: null,
+  setCurrentBook: (book) => set({ currentBook: book }),
+  startReading: (book) => set((state) => ({
+    currentBook: book ?? state.currentBook,
+    sessionState: 'reading',
+    catalogOpen: false,
+  })),
+  shelfSelection: null,
+  setShelfSelection: (selection) => set({ shelfSelection: selection }),
+  hoveredSpine: null,
+  setHoveredSpine: (book) => set({ hoveredSpine: book }),
+  catalogOpen: false,
+  setCatalogOpen: (open) => set({ catalogOpen: open }),
 
   // Keep the last seat transform for one render after leaving. Player uses it
   // to place the avatar beside the chair before normal movement resumes.
@@ -79,7 +105,8 @@ export const useGameStore = create<GameState>((set) => ({
     sessionState: 'idle', 
     isSeated: false, 
     seatTransform: state.seatTransform,
-    timerActive: false
+    timerActive: false,
+    catalogOpen: false,
   })),
 
   joystickVector: { x: 0, y: 0 },

@@ -8,7 +8,7 @@ export const DustParticles = () => {
   const count = 500;
   const positions = new Float32Array(count * 3);
   
-  for (let i = 0; i < count * 3; i++) {
+  for (let i = 0; i < count; i++) {
     positions[i * 3] = (Math.random() - 0.5) * 60;
     positions[i * 3 + 1] = Math.random() * 25;
     positions[i * 3 + 2] = (Math.random() - 0.5) * 70;
@@ -225,7 +225,7 @@ export const Environment3D = () => {
           <mesh material={beamMat}><cylinderGeometry args={[0.05, 0.05, 12]} /></mesh>
           <mesh position={[0, -6, 0]} material={new THREE.MeshStandardMaterial({ color: '#2c3e50' })}><cylinderGeometry args={[2, 2.5, 1]} /></mesh>
           <mesh position={[0, -6.2, 0]} material={new THREE.MeshBasicMaterial({ color: '#ffdf85' })}><sphereGeometry args={[1]} /></mesh>
-          <pointLight position={[0, -7, 0]} intensity={2.0} distance={40} color="#ffdf85" castShadow shadow-bias={-0.001} />
+          <pointLight position={[0, -7, 0]} intensity={2.0} distance={40} color="#ffdf85" />
         </group>
       ))}
 
@@ -235,7 +235,7 @@ export const Environment3D = () => {
           <mesh material={beamMat}><cylinderGeometry args={[0.02, 0.02, 8]} /></mesh>
           <mesh position={[0, -4, 0]} material={new THREE.MeshStandardMaterial({ color: '#2c3e50' })}><cylinderGeometry args={[0.8, 1, 0.5]} /></mesh>
           <mesh position={[0, -4.1, 0]} material={new THREE.MeshBasicMaterial({ color: '#ffdf85' })}><sphereGeometry args={[0.4]} /></mesh>
-          <pointLight position={[0, -4.5, 0]} intensity={1} distance={20} color="#ffdf85" castShadow shadow-bias={-0.001} />
+          <pointLight position={[0, -4.5, 0]} intensity={1} distance={20} color="#ffdf85" />
         </group>
       ))}
       {[-25, -10, 5, 20].map((z, i) => (
@@ -243,7 +243,7 @@ export const Environment3D = () => {
           <mesh material={beamMat}><cylinderGeometry args={[0.02, 0.02, 8]} /></mesh>
           <mesh position={[0, -4, 0]} material={new THREE.MeshStandardMaterial({ color: '#2c3e50' })}><cylinderGeometry args={[0.8, 1, 0.5]} /></mesh>
           <mesh position={[0, -4.1, 0]} material={new THREE.MeshBasicMaterial({ color: '#ffdf85' })}><sphereGeometry args={[0.4]} /></mesh>
-          <pointLight position={[0, -4.5, 0]} intensity={1} distance={20} color="#ffdf85" castShadow shadow-bias={-0.001} />
+          <pointLight position={[0, -4.5, 0]} intensity={1} distance={20} color="#ffdf85" />
         </group>
       ))}
       {[-10, 10].map((x, i) => (
@@ -251,7 +251,7 @@ export const Environment3D = () => {
           <mesh material={beamMat}><cylinderGeometry args={[0.02, 0.02, 8]} /></mesh>
           <mesh position={[0, -4, 0]} material={new THREE.MeshStandardMaterial({ color: '#2c3e50' })}><cylinderGeometry args={[0.8, 1, 0.5]} /></mesh>
           <mesh position={[0, -4.1, 0]} material={new THREE.MeshBasicMaterial({ color: '#ffdf85' })}><sphereGeometry args={[0.4]} /></mesh>
-          <pointLight position={[0, -4.5, 0]} intensity={1} distance={20} color="#ffdf85" castShadow shadow-bias={-0.001} />
+          <pointLight position={[0, -4.5, 0]} intensity={1} distance={20} color="#ffdf85" />
         </group>
       ))}
       {[-10, 10].map((x, i) => (
@@ -259,7 +259,7 @@ export const Environment3D = () => {
           <mesh material={beamMat}><cylinderGeometry args={[0.02, 0.02, 8]} /></mesh>
           <mesh position={[0, -4, 0]} material={new THREE.MeshStandardMaterial({ color: '#2c3e50' })}><cylinderGeometry args={[0.8, 1, 0.5]} /></mesh>
           <mesh position={[0, -4.1, 0]} material={new THREE.MeshBasicMaterial({ color: '#ffdf85' })}><sphereGeometry args={[0.4]} /></mesh>
-          <pointLight position={[0, -4.5, 0]} intensity={1} distance={20} color="#ffdf85" castShadow shadow-bias={-0.001} />
+          <pointLight position={[0, -4.5, 0]} intensity={1} distance={20} color="#ffdf85" />
         </group>
       ))}
 

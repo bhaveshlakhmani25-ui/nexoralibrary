@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { RigidBody, CuboidCollider } from '@react-three/rapier';
+import { Html } from '@react-three/drei';
 import { useGameStore } from '../../store';
 import * as THREE from 'three';
 
@@ -9,11 +10,18 @@ const fabricGreen = new THREE.MeshStandardMaterial({ color: '#2d4c36', roughness
 const fabricCaramel = new THREE.MeshStandardMaterial({ color: '#c17a3f', roughness: 0.95 });
 const fabricNavy = new THREE.MeshStandardMaterial({ color: '#1a365d', roughness: 0.95 });
 const lampGold = new THREE.MeshStandardMaterial({ color: '#d4af37', metalness: 0.8, roughness: 0.3 });
+// Lamp shades glow instead of each carrying a real light; dozens of point
+// lights make every material shader slower and can exceed GPU limits.
+const lampGlow = new THREE.MeshStandardMaterial({ color: '#ffdf85', emissive: '#ffcf6b', emissiveIntensity: 1.2 });
 const paperMat = new THREE.MeshStandardMaterial({ color: '#fdf6e3', roughness: 1 });
 const leafMat = new THREE.MeshStandardMaterial({ color: '#3a5f45', roughness: 0.9 });
 const potMat = new THREE.MeshStandardMaterial({ color: '#a04825', roughness: 0.95 });
 const frameMat = new THREE.MeshStandardMaterial({ color: '#111111', roughness: 0.8 });
 const canvasMat = new THREE.MeshStandardMaterial({ color: '#ecf0f1', roughness: 1 });
+
+// Height of the seated player's body origin: puts the avatar's hips on a
+// 0.55-high chair seat (the avatar is lowered by 0.5 while seated).
+const SEAT_HEIGHT = 0.95;
 
 const bookColors = ['#8a3a3a', '#314859', '#486049', '#614266', '#a87232', '#3d5e56', '#444444', '#8c4e2a', '#6b6863'];
 
@@ -106,6 +114,45 @@ export const Bookshelf = ({ position, rotation = [0, 0, 0], label = "" }: { posi
   );
 };
 
+type SeatTransform = { pos: [number, number, number], rot: [number, number, number] };
+
+// Trigger volume around a seat. Selectors keep each seat from re-rendering
+// on unrelated store updates such as timer ticks.
+const SeatSensor = ({ id, seat, size }: { id: number, seat: SeatTransform, size: [number, number, number] }) => {
+  const setNearTable = useGameStore((s) => s.setNearTable);
+  const clearNearTable = useGameStore((s) => s.clearNearTable);
+
+  return (
+    <RigidBody type="fixed" colliders={false} sensor>
+      <CuboidCollider args={size} position={[0, 1, 0]}
+        onIntersectionEnter={() => setNearTable({ id, transform: seat })}
+        onIntersectionExit={() => clearNearTable(id)}
+      />
+    </RigidBody>
+  );
+};
+
+// A single floating "[E] Sit" prompt, in the style of a Roblox
+// ProximityPrompt, that moves to whichever seat the player is near. It stays
+// mounted and is only hidden: mounting and unmounting drei <Html> while
+// React is rendering throws under React 19.
+export const SeatPrompt = () => {
+  const nearTable = useGameStore((s) => s.nearTable);
+  const isSeated = useGameStore((s) => s.isSeated);
+  const setSeated = useGameStore((s) => s.setSeated);
+  const visible = nearTable !== null && !isSeated;
+  const [x, y, z] = nearTable?.transform.pos ?? [0, -50, 0];
+
+  return (
+    <Html position={[x, y + 1.4, z]} center zIndexRange={[6, 0]} style={{ display: visible ? 'block' : 'none' }}>
+      <button className="proximity-prompt" onClick={() => nearTable && setSeated(true, nearTable.transform)}>
+        <span className="proximity-key">E</span>
+        <span>Sit</span>
+      </button>
+    </Html>
+  );
+};
+
 export const DeskChair = ({ position, rotation = [0,0,0], color = 'navy' }: any) => {
   const mat = color === 'green' ? fabricGreen : color === 'caramel' ? fabricCaramel : fabricNavy;
   return (
@@ -121,14 +168,12 @@ export const DeskChair = ({ position, rotation = [0,0,0], color = 'navy' }: any)
 };
 
 export const IndividualDesk = ({ id, position, rotation = [0,0,0] }: { id: number, position: [number, number, number], rotation?: [number, number, number] }) => {
-  const { setNearTable } = useGameStore();
-
   const seatWorldInfo = useMemo(() => {
     const obj = new THREE.Object3D();
     obj.position.set(...position);
     obj.rotation.set(...rotation);
     obj.updateMatrixWorld();
-    const localSeatPos = new THREE.Vector3(0, 0.2, 0.6);
+    const localSeatPos = new THREE.Vector3(0, SEAT_HEIGHT, 0.6);
     localSeatPos.applyMatrix4(obj.matrixWorld);
     const yRot = (rotation[1] || 0);
     return { pos: [localSeatPos.x, localSeatPos.y, localSeatPos.z] as [number, number, number], rot: [0, yRot, 0] as [number, number, number] };
@@ -147,8 +192,7 @@ export const IndividualDesk = ({ id, position, rotation = [0,0,0] }: { id: numbe
 
         <mesh position={[0.5, 0.85, -0.3]} castShadow material={lampGold}><cylinderGeometry args={[0.1, 0.1, 0.05]} /></mesh>
         <mesh position={[0.5, 1.0, -0.3]} castShadow material={lampGold}><cylinderGeometry args={[0.02, 0.02, 0.3]} /></mesh>
-        <mesh position={[0.4, 1.15, -0.3]} rotation={[0, 0, 0.5]} castShadow material={lampGold}><coneGeometry args={[0.15, 0.2]} /></mesh>
-        <pointLight position={[0.4, 1.1, -0.3]} intensity={0.5} distance={3} color="#ffdf85" />
+        <mesh position={[0.4, 1.15, -0.3]} rotation={[0, 0, 0.5]} castShadow material={lampGlow}><coneGeometry args={[0.15, 0.2]} /></mesh>
 
         <mesh position={[0, 0.83, 0]} rotation={[0, 0.1, 0]} castShadow material={paperMat}><boxGeometry args={[0.4, 0.02, 0.3]} /></mesh>
         <mesh position={[0.25, 0.83, 0.1]} rotation={[0, -0.5, 0]} castShadow material={new THREE.MeshStandardMaterial({ color: '#2c3e50' })}><cylinderGeometry args={[0.01, 0.01, 0.15]} /></mesh>
@@ -158,25 +202,18 @@ export const IndividualDesk = ({ id, position, rotation = [0,0,0] }: { id: numbe
         <DeskChair position={[0, 0, 0.6]} color="navy" />
       </RigidBody>
 
-      <RigidBody type="fixed" colliders={false} sensor>
-        <CuboidCollider args={[1, 1, 1]} position={[0, 1, 0]} 
-          onIntersectionEnter={() => setNearTable({ id, transform: seatWorldInfo })} 
-          onIntersectionExit={() => setNearTable(null)} 
-        />
-      </RigidBody>
+      <SeatSensor id={id} seat={seatWorldInfo} size={[1, 1, 1.6]} />
     </group>
   );
 };
 
 export const GroupTable = ({ id, position, rotation = [0,0,0] }: { id: number, position: [number, number, number], rotation?: [number, number, number] }) => {
-  const { setNearTable } = useGameStore();
-
   const seatWorldInfo = useMemo(() => {
     const obj = new THREE.Object3D();
     obj.position.set(...position);
     obj.rotation.set(...rotation);
     obj.updateMatrixWorld();
-    const localSeatPos = new THREE.Vector3(0, 0.2, 1.8);
+    const localSeatPos = new THREE.Vector3(0, SEAT_HEIGHT, 1.8);
     localSeatPos.applyMatrix4(obj.matrixWorld);
     const yRot = (rotation[1] || 0);
     return { pos: [localSeatPos.x, localSeatPos.y, localSeatPos.z] as [number, number, number], rot: [0, yRot, 0] as [number, number, number] };
@@ -200,25 +237,18 @@ export const GroupTable = ({ id, position, rotation = [0,0,0] }: { id: number, p
         <DeskChair position={[-1.8, 0, 0]} rotation={[0, Math.PI/2, 0]} color="caramel" />
       </RigidBody>
 
-      <RigidBody type="fixed" colliders={false} sensor>
-        <CuboidCollider args={[2.5, 1, 2.5]} position={[0, 1, 0]} 
-          onIntersectionEnter={() => setNearTable({ id, transform: seatWorldInfo })} 
-          onIntersectionExit={() => setNearTable(null)} 
-        />
-      </RigidBody>
+      <SeatSensor id={id} seat={seatWorldInfo} size={[2.5, 1, 2.5]} />
     </group>
   );
 };
 
 export const ReadingNook = ({ id, position, rotation = [0,0,0] }: { id: number, position: [number, number, number], rotation?: [number, number, number] }) => {
-  const { setNearTable } = useGameStore();
-
   const seatWorldInfo = useMemo(() => {
     const obj = new THREE.Object3D();
     obj.position.set(...position);
     obj.rotation.set(...rotation);
     obj.updateMatrixWorld();
-    const localSeatPos = new THREE.Vector3(-0.5, 0.2, 0); 
+    const localSeatPos = new THREE.Vector3(-0.5, SEAT_HEIGHT, 0); 
     localSeatPos.applyMatrix4(obj.matrixWorld);
     const yRot = (rotation[1] || 0) + Math.PI/4;
     return { pos: [localSeatPos.x, localSeatPos.y, localSeatPos.z] as [number, number, number], rot: [0, yRot, 0] as [number, number, number] };
@@ -241,16 +271,10 @@ export const ReadingNook = ({ id, position, rotation = [0,0,0] }: { id: number, 
         <mesh position={[1, 0.45, -0.5]} castShadow material={paperMat}><boxGeometry args={[0.3, 0.05, 0.2]} /></mesh>
 
         <mesh position={[-1.2, 1, -1]} castShadow material={lampGold}><cylinderGeometry args={[0.05, 0.05, 2]} /></mesh>
-        <mesh position={[-1.2, 2, -1]} castShadow material={new THREE.MeshStandardMaterial({ color: '#fdf6e3', transparent: true, opacity: 0.8 })}><cylinderGeometry args={[0.4, 0.4, 0.4]} /></mesh>
-        <pointLight position={[-1.2, 2, -1]} intensity={1.0} distance={8} color="#ffdf85" />
+        <mesh position={[-1.2, 2, -1]} castShadow material={lampGlow}><cylinderGeometry args={[0.4, 0.4, 0.4]} /></mesh>
       </RigidBody>
 
-      <RigidBody type="fixed" colliders={false} sensor>
-        <CuboidCollider args={[2.5, 1, 2.5]} position={[0, 1, 0]} 
-          onIntersectionEnter={() => setNearTable({ id, transform: seatWorldInfo })} 
-          onIntersectionExit={() => setNearTable(null)} 
-        />
-      </RigidBody>
+      <SeatSensor id={id} seat={seatWorldInfo} size={[2.5, 1, 2.5]} />
     </group>
   );
 };
@@ -290,13 +314,11 @@ export const WallArt = ({ position, rotation = [0,0,0] }: { position: [number, n
   </RigidBody>
 );
 
-export const GrandStaircase = ({ position, rotation = [0,0,0] }: { position: [number, number, number], rotation?: [number, number, number] }) => {
-  const steps = 20;
-  const stepHeight = 0.5;
-  // A slightly deeper tread keeps the hidden walk surface below a 35° slope,
-  // which lets the dynamic player body climb it smoothly.
-  const stepDepth = 0.75;
-  const width = 4;
+// A slightly deeper tread keeps the hidden walk surface below a 35° slope,
+// which lets the dynamic player body climb it smoothly.
+export const GrandStaircase = ({ position, rotation = [0,0,0], steps = 20, stepHeight = 0.5, stepDepth = 0.75, width = 4 }: {
+  position: [number, number, number], rotation?: [number, number, number], steps?: number, stepHeight?: number, stepDepth?: number, width?: number,
+}) => {
   const totalHeight = steps * stepHeight;
   const totalDepth = steps * stepDepth;
   const rampAngle = Math.atan2(totalHeight, totalDepth);
